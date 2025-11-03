@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { Check, Sparkles, Heart, Briefcase, Smile, Plus, Edit2, Trash2, ChevronDown, ChevronUp, Volume2, Eye, Type, Palette, X, MessageCircle, Settings, FlaskConical } from 'lucide-react';
+import { Check, Sparkles, Heart, Briefcase, Smile, Plus, Edit2, Trash2, ChevronDown, ChevronUp, Volume2, Eye, Palette, X, MessageCircle, Settings, FlaskConical } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAccessibility } from './AccessibilitySettings';
 import { useToneSettings } from './ToneSettingsContext';
@@ -119,8 +119,6 @@ export function ToneSettings({ selectedPreset, onPresetChange, onPresetsChange, 
     setShowTonesOnAll,
     autoCheckEnabled,
     setAutoCheckEnabled,
-    compactMode,
-    setCompactMode,
     disableSuggestions,
     setDisableSuggestions,
     suggestionTrigger,
@@ -332,14 +330,6 @@ export function ToneSettings({ selectedPreset, onPresetChange, onPresetsChange, 
               </div>
               <Switch checked={autoCheckEnabled} onCheckedChange={setAutoCheckEnabled} />
             </label>
-
-            <label className="flex items-center justify-between p-3 bg-[#F6F6F6] rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-              <div className="flex-1 min-w-0 pr-3">
-                <div className="text-[14px] text-gray-900">Compact mode</div>
-                <div className="text-[12px] text-gray-600 mt-0.5">Show smaller tone indicators</div>
-              </div>
-              <Switch checked={compactMode} onCheckedChange={setCompactMode} />
-            </label>
           </div>
         </div>
 
@@ -361,19 +351,22 @@ export function ToneSettings({ selectedPreset, onPresetChange, onPresetsChange, 
                 exit={{ opacity: 0, height: 0 }}
                 className="space-y-2.5"
               >
-                <label className="flex items-center justify-between p-3 bg-[#F6F6F6] rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                  <div className="flex-1 min-w-0 pr-3">
-                    <div className="text-[14px] text-gray-900">Disable tone suggestions</div>
-                    <div className="text-[12px] text-gray-600 mt-0.5">Turn off automatic suggestions</div>
-                  </div>
-                  <Switch checked={disableSuggestions} onCheckedChange={setDisableSuggestions} />
-                </label>
-
                 <div className="p-3 bg-[#F6F6F6] rounded-lg">
                   <label className="text-[14px] text-gray-900 block mb-2">
                     When to show suggestions
                   </label>
-                  <Select value={suggestionTrigger} onValueChange={(value: any) => setSuggestionTrigger(value)}>
+                  <Select 
+                    value={disableSuggestions ? 'never' : suggestionTrigger} 
+                    onValueChange={(value: any) => {
+                      if (value === 'never') {
+                        setDisableSuggestions(true);
+                        setSuggestionTrigger('always');
+                      } else {
+                        setDisableSuggestions(false);
+                        setSuggestionTrigger(value);
+                      }
+                    }}
+                  >
                     <SelectTrigger className="text-[14px]">
                       <SelectValue />
                     </SelectTrigger>
@@ -411,27 +404,6 @@ export function ToneSettings({ selectedPreset, onPresetChange, onPresetsChange, 
                 exit={{ opacity: 0, height: 0 }}
                 className="space-y-2.5"
               >
-                {/* Text Size */}
-                <div className="p-3 bg-[#F6F6F6] rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Type className="w-4 h-4 text-gray-600" />
-                    <label className="text-[14px] text-gray-900">Text Size</label>
-                  </div>
-                  <Select 
-                    value={settings.textSize} 
-                    onValueChange={(value: 'small' | 'medium' | 'large') => updateSettings({ textSize: value })}
-                  >
-                    <SelectTrigger className="text-[14px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="small">Small</SelectItem>
-                      <SelectItem value="medium">Medium (Default)</SelectItem>
-                      <SelectItem value="large">Large</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* High Contrast */}
                 <label className="flex items-center justify-between p-3 bg-[#F6F6F6] rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
                   <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-3">
