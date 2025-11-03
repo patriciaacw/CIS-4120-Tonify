@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface AccessibilitySettings {
-  textSize: 'small' | 'medium' | 'large';
   highContrast: boolean;
   colorblindMode: 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia';
   readAloudEnabled: boolean;
@@ -10,15 +9,15 @@ interface AccessibilitySettings {
 interface AccessibilityContextType {
   settings: AccessibilitySettings;
   updateSettings: (updates: Partial<AccessibilitySettings>) => void;
-  getTextSizeClass: () => string;
   getToneColor: (type: 'positive' | 'neutral' | 'negative' | 'uncertain') => string;
+  getToneColorClasses: (type: 'positive' | 'neutral' | 'negative' | 'uncertain', highContrast?: boolean) => string;
+  getConfidenceBarColor: (confidence: number) => string;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType | null>(null);
 
 export function AccessibilityProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AccessibilitySettings>({
-    textSize: 'medium',
     highContrast: false,
     colorblindMode: 'none',
     readAloudEnabled: false
@@ -26,17 +25,6 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
 
   const updateSettings = (updates: Partial<AccessibilitySettings>) => {
     setSettings(prev => ({ ...prev, ...updates }));
-  };
-
-  const getTextSizeClass = () => {
-    switch (settings.textSize) {
-      case 'small':
-        return 'text-sm';
-      case 'large':
-        return 'text-lg';
-      default:
-        return 'text-base';
-    }
   };
 
   const getToneColor = (type: 'positive' | 'neutral' | 'negative' | 'uncertain') => {
@@ -77,8 +65,71 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     return standardColors[type];
   };
 
+  const getToneColorClasses = (type: 'positive' | 'neutral' | 'negative' | 'uncertain', highContrast = false) => {
+    const borderWidth = highContrast ? 'border-4' : 'border-2';
+    
+    // Standard colors (green=positive, yellow=neutral, red=negative)
+    const standardColors = {
+      positive: `bg-green-100 border-green-500 text-green-700 ${borderWidth}`,
+      neutral: `bg-yellow-100 border-yellow-500 text-yellow-700 ${borderWidth}`,
+      negative: `bg-red-100 border-red-500 text-red-700 ${borderWidth}`,
+      uncertain: `bg-amber-100 border-amber-500 text-amber-700 ${borderWidth}`
+    };
+
+    // Colorblind-friendly alternatives
+    const colorblindColors = {
+      protanopia: {
+        positive: `bg-blue-100 border-blue-500 text-blue-700 ${borderWidth}`,
+        neutral: `bg-amber-100 border-amber-500 text-amber-700 ${borderWidth}`,
+        negative: `bg-orange-100 border-orange-600 text-orange-800 ${borderWidth}`,
+        uncertain: `bg-purple-100 border-purple-500 text-purple-700 ${borderWidth}`
+      },
+      deuteranopia: {
+        positive: `bg-blue-100 border-blue-500 text-blue-700 ${borderWidth}`,
+        neutral: `bg-amber-100 border-amber-500 text-amber-700 ${borderWidth}`,
+        negative: `bg-orange-100 border-orange-600 text-orange-800 ${borderWidth}`,
+        uncertain: `bg-purple-100 border-purple-500 text-purple-700 ${borderWidth}`
+      },
+      tritanopia: {
+        positive: `bg-cyan-100 border-cyan-500 text-cyan-700 ${borderWidth}`,
+        neutral: `bg-pink-100 border-pink-500 text-pink-700 ${borderWidth}`,
+        negative: `bg-rose-100 border-rose-600 text-rose-800 ${borderWidth}`,
+        uncertain: `bg-purple-100 border-purple-500 text-purple-700 ${borderWidth}`
+      }
+    };
+
+    if (settings.colorblindMode !== 'none') {
+      return colorblindColors[settings.colorblindMode][type];
+    }
+
+    return standardColors[type];
+  };
+
+  const getConfidenceBarColor = (confidence: number) => {
+    // Determine base color based on confidence level
+    let baseColor = 'bg-red-500';
+    if (confidence > 70) baseColor = 'bg-green-500';
+    else if (confidence > 40) baseColor = 'bg-amber-500';
+
+    // Apply colorblind-friendly alternatives if needed
+    if (settings.colorblindMode !== 'none') {
+      if (confidence > 70) {
+        // High confidence - use blue for protanopia/deuteranopia, cyan for tritanopia
+        return settings.colorblindMode === 'tritanopia' ? 'bg-cyan-500' : 'bg-blue-500';
+      } else if (confidence > 40) {
+        // Medium confidence - keep amber (works for all types)
+        return 'bg-amber-500';
+      } else {
+        // Low confidence - use orange for protanopia/deuteranopia, rose for tritanopia
+        return settings.colorblindMode === 'tritanopia' ? 'bg-rose-500' : 'bg-orange-600';
+      }
+    }
+
+    return baseColor;
+  };
+
   return (
-    <AccessibilityContext.Provider value={{ settings, updateSettings, getTextSizeClass, getToneColor }}>
+    <AccessibilityContext.Provider value={{ settings, updateSettings, getToneColor, getToneColorClasses, getConfidenceBarColor }}>
       {children}
     </AccessibilityContext.Provider>
   );
