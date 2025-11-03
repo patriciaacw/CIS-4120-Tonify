@@ -5,6 +5,8 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 import { ToneIndicator } from './ToneIndicator';
 import { SuggestedReplies } from './SuggestedReplies';
 import { TonePreset } from './ToneSettings';
+import { useAccessibility } from './AccessibilitySettings';
+import { useToneSettings } from './ToneSettingsContext';
 
 interface Message {
   id: string;
@@ -233,6 +235,8 @@ export function ChatConversationScreen({
   const [liveAnalysis, setLiveAnalysis] = useState<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { getConfidenceBarColor } = useAccessibility();
+  const { suggestionTrigger, disableSuggestions } = useToneSettings();
 
   const currentPresetData = allPresets.find(p => p.id === selectedPreset);
 
@@ -395,17 +399,28 @@ export function ChatConversationScreen({
                     </div>
                   </motion.div>
 
-                  {message.tone && (
-                    <button
-                      onClick={() => setExpandedTone(expandedTone === message.id ? null : message.id)}
-                      className="flex-shrink-0 mt-1"
-                    >
-                      <ToneIndicator 
-                        tone={message.tone} 
-                        isExpanded={expandedTone === message.id}
-                      />
-                    </button>
-                  )}
+                  {message.tone && (() => {
+                    // Don't show tone indicators if disabled
+                    if (disableSuggestions || suggestionTrigger === 'never') return null;
+                    
+                    // Only show negative tones if set to negative
+                    if (suggestionTrigger === 'negative' && message.tone.type !== 'negative') return null;
+                    
+                    // Only show negative or uncertain tones if set to uncertain
+                    if (suggestionTrigger === 'uncertain' && !['negative', 'uncertain'].includes(message.tone.type)) return null;
+                    
+                    return (
+                      <button
+                        onClick={() => setExpandedTone(expandedTone === message.id ? null : message.id)}
+                        className="flex-shrink-0 mt-1"
+                      >
+                        <ToneIndicator 
+                          tone={message.tone} 
+                          isExpanded={expandedTone === message.id}
+                        />
+                      </button>
+                    );
+                  })()}
                 </div>
 
                 {/* Tone Explanation */}
@@ -424,7 +439,7 @@ export function ChatConversationScreen({
                             <span className="text-[11px] text-gray-500">Confidence:</span>
                             <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                               <div 
-                                className="h-full bg-[#007AFF] rounded-full transition-all"
+                                className={`h-full ${getConfidenceBarColor(message.tone.confidence)} rounded-full transition-all`}
                                 style={{ width: `${message.tone.confidence}%` }}
                               />
                             </div>
