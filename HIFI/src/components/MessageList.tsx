@@ -4,6 +4,7 @@ import { SuggestedReplies } from './SuggestedReplies';
 import { motion, AnimatePresence } from 'motion/react';
 import { Info, HelpCircle } from 'lucide-react';
 import { useToneSettings } from './ToneSettingsContext';
+import { useAccessibility } from './AccessibilitySettings';
 
 interface Message {
   id: string;
@@ -132,6 +133,8 @@ export function MessageList() {
   const [expandedTone, setExpandedTone] = useState<string | null>(null);
   const [showRepliesFor, setShowRepliesFor] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(true);
+  const { getConfidenceBarColor } = useAccessibility();
+  const { suggestionTrigger, disableSuggestions } = useToneSettings();
 
   const toggleToneExplanation = (messageId: string) => {
     setExpandedTone(expandedTone === messageId ? null : messageId);
@@ -177,17 +180,28 @@ export function MessageList() {
                   <div className="text-[11px] opacity-60 mt-0.5">{message.timestamp}</div>
                 </motion.div>
 
-                {message.tone && (
-                  <button
-                    onClick={() => toggleToneExplanation(message.id)}
-                    className="flex-shrink-0 mt-1"
-                  >
-                    <ToneIndicator 
-                      tone={message.tone} 
-                      isExpanded={expandedTone === message.id}
-                    />
-                  </button>
-                )}
+                {message.tone && (() => {
+                  // Don't show tone indicators if disabled
+                  if (disableSuggestions || suggestionTrigger === 'never') return null;
+                  
+                  // Only show negative tones if set to negative
+                  if (suggestionTrigger === 'negative' && message.tone.type !== 'negative') return null;
+                  
+                  // Only show negative or uncertain tones if set to uncertain
+                  if (suggestionTrigger === 'uncertain' && !['negative', 'uncertain'].includes(message.tone.type)) return null;
+                  
+                  return (
+                    <button
+                      onClick={() => toggleToneExplanation(message.id)}
+                      className="flex-shrink-0 mt-1"
+                    >
+                      <ToneIndicator 
+                        tone={message.tone} 
+                        isExpanded={expandedTone === message.id}
+                      />
+                    </button>
+                  );
+                })()}
               </div>
 
               <AnimatePresence>
@@ -205,7 +219,7 @@ export function MessageList() {
                           <span className="text-[10px] text-gray-500">Confidence:</span>
                           <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                             <div 
-                              className="h-full bg-[#007AFF] rounded-full transition-all"
+                              className={`h-full ${getConfidenceBarColor(message.tone.confidence)} rounded-full transition-all`}
                               style={{ width: `${message.tone.confidence}%` }}
                             />
                           </div>
