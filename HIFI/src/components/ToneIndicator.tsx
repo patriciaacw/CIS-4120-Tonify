@@ -16,28 +16,10 @@ interface ToneIndicatorProps {
 }
 
 export function ToneIndicator({ tone, isExpanded = false, size = 'md', showConfidence = false }: ToneIndicatorProps) {
-  const { settings, getToneColor } = useAccessibility();
+  const { settings, getToneColorClasses } = useAccessibility();
   
   const getColorClasses = () => {
-    // Updated color scheme: green=positive, yellow/amber=neutral, red=negative
-    const baseClasses = settings.highContrast ? 'border-4' : 'border-2';
-    
-    switch (tone.type) {
-      case 'positive':
-        // Green for positive emotions
-        return `bg-green-100 border-green-500 text-green-700 ${baseClasses}`;
-      case 'negative':
-        // Red for negative emotions
-        return `bg-red-100 border-red-500 text-red-700 ${baseClasses}`;
-      case 'neutral':
-        // Yellow/Amber for neutral
-        return `bg-yellow-100 border-yellow-500 text-yellow-700 ${baseClasses}`;
-      case 'uncertain':
-        // Amber for uncertain
-        return `bg-amber-100 border-amber-500 text-amber-700 ${baseClasses}`;
-      default:
-        return `bg-gray-100 border-gray-300 text-gray-700 ${baseClasses}`;
-    }
+    return getToneColorClasses(tone.type, settings.highContrast);
   };
 
   const getIcon = () => {
