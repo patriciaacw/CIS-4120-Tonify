@@ -244,10 +244,9 @@ export function ComposeArea({ selectedPreset, allPresets, activeTab, onTabChange
   const { autoCheckEnabled, disableSuggestions, suggestionTrigger } = useToneSettings();
   const { settings } = useAccessibility();
   
-  // Find the current preset data
   const currentPresetData = allPresets.find(p => p.id === selectedPreset);
 
-  // Real-time tone feedback while typing (if auto-check is enabled)
+  // Real-time tone feedback while typing
   useEffect(() => {
     if (autoCheckEnabled && message.trim()) {
       const timer = setTimeout(() => {
@@ -272,14 +271,51 @@ export function ComposeArea({ selectedPreset, allPresets, activeTab, onTabChange
     }
   }, [analysis]);
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
+    if (!message.trim()) return;
     setIsAnalyzing(true);
-    setTimeout(() => {
-      const result = analyzeTone(message, selectedPreset, currentPresetData);
-      setAnalysis(result);
+
+    try {
+      // 1) Ask AI what the tone is
+      const tone = await classifyTone(message);
+
+      // 2) Ask AI to rewrite to match the user’s preset style
+      const targetTone =
+        currentPresetData?.guidelines?.targetTone ||
+        currentPresetData?.name ||
+        selectedPreset ||
+        "friendly";
+
+      const rewrite = await rewriteTone(message, targetTone);
+
+      const newAnalysis: ToneAnalysis = {
+        originalText: message,
+        detectedTone: {
+          label: tone.label,
+          type: tone.type,
+          explanation: tone.explanation,
+          confidence: tone.confidence
+        },
+        // Short explanatory suggestions from the classifier
+        suggestions: tone.suggestions && tone.suggestions.length > 0
+          ? tone.suggestions
+          : undefined,
+        // First full rewritten message as “Apply Suggested Version”
+        alternativeText: rewrite.suggestions[0],
+        // (we’ll skip emojiSuggestions for now)
+        emojiSuggestions: []
+      };
+
+      setAnalysis(newAnalysis);
+    } catch (err) {
+      console.error(err);
+      // fallback: clear analysis on error
+      setAnalysis(null);
+    } finally {
       setIsAnalyzing(false);
-    }, 600);
+    }
   };
+
 
   const applyAlternative = () => {
     if (analysis?.alternativeText) {
