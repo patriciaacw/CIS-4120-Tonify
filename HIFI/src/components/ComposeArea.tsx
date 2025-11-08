@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { TonePreset } from './ToneSettings';
 import { useToneSettings } from './ToneSettingsContext';
 import { useAccessibility } from './AccessibilitySettings';
+import { classifyTone, rewriteTone } from '../services/aiClient';
 
 interface ComposeAreaProps {
   selectedPreset: string;
