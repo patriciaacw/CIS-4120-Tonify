@@ -1,3 +1,4 @@
+//Generated with assistance from Chat GPT – Nov 8, 2025
 import React, { useState, useEffect, useRef } from 'react';
 import { ToneIndicator } from './ToneIndicator';
 import { Button } from './ui/button';
