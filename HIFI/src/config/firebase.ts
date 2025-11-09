@@ -1,3 +1,5 @@
+// Generated with assistance from Claude AI (Anthropic) - Nov 5, 2024
+
 import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
 import { getAuth } from 'firebase/auth';

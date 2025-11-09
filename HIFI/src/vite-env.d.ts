@@ -1,3 +1,6 @@
+// Generated with assistance from Claude AI (Anthropic) - Nov 5, 2024
+
+
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {

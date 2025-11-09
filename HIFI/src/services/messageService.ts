@@ -1,3 +1,5 @@
+// Generated with assistance from Claude AI (Anthropic) - Nov 5, 2024
+
 import { database } from '../config/firebase';
 import { ref, push, onValue, off, serverTimestamp, set } from 'firebase/database';
 
