@@ -31,7 +31,9 @@ export OPENAI_API_KEY="sk-your-api-key-here"
 
 ### Step 1: Start the Backend Server
 
-In your terminal, set your OpenAI API key and start the server. Install the express package if you do not have already.:
+In your terminal, set your OpenAI API key and start the server. 
+cd into the HIFI -> src -> services folder of the project.
+Install the express package if you do not have already.:
 ```bash
 npm install express cors body-parser openai
 export OPENAI_API_KEY="sk-your-api-key-here"
