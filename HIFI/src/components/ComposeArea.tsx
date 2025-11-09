@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { TonePreset } from './ToneSettings';
 import { useToneSettings } from './ToneSettingsContext';
 import { useAccessibility } from './AccessibilitySettings';
+import { classifyTone, rewriteTone } from '../services/aiClient';
 
 interface ComposeAreaProps {
   selectedPreset: string;
@@ -243,10 +244,9 @@ export function ComposeArea({ selectedPreset, allPresets, activeTab, onTabChange
   const { autoCheckEnabled, disableSuggestions, suggestionTrigger } = useToneSettings();
   const { settings } = useAccessibility();
   
-  // Find the current preset data
   const currentPresetData = allPresets.find(p => p.id === selectedPreset);
 
-  // Real-time tone feedback while typing (if auto-check is enabled)
+  // Real-time tone feedback while typing
   useEffect(() => {
     if (autoCheckEnabled && message.trim()) {
       const timer = setTimeout(() => {
@@ -271,14 +271,51 @@ export function ComposeArea({ selectedPreset, allPresets, activeTab, onTabChange
     }
   }, [analysis]);
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
+    if (!message.trim()) return;
     setIsAnalyzing(true);
-    setTimeout(() => {
-      const result = analyzeTone(message, selectedPreset, currentPresetData);
-      setAnalysis(result);
+
+    try {
+      // 1) Ask AI what the tone is
+      const tone = await classifyTone(message);
+
+      // 2) Ask AI to rewrite to match the user’s preset style
+      const targetTone =
+        currentPresetData?.guidelines?.targetTone ||
+        currentPresetData?.name ||
+        selectedPreset ||
+        "friendly";
+
+      const rewrite = await rewriteTone(message, targetTone);
+
+      const newAnalysis: ToneAnalysis = {
+        originalText: message,
+        detectedTone: {
+          label: tone.label,
+          type: tone.type,
+          explanation: tone.explanation,
+          confidence: tone.confidence
+        },
+        // Short explanatory suggestions from the classifier
+        suggestions: tone.suggestions && tone.suggestions.length > 0
+          ? tone.suggestions
+          : undefined,
+        // First full rewritten message as “Apply Suggested Version”
+        alternativeText: rewrite.suggestions[0],
+        // (we’ll skip emojiSuggestions for now)
+        emojiSuggestions: []
+      };
+
+      setAnalysis(newAnalysis);
+    } catch (err) {
+      console.error(err);
+      // fallback: clear analysis on error
+      setAnalysis(null);
+    } finally {
       setIsAnalyzing(false);
-    }, 600);
+    }
   };
+
 
   const applyAlternative = () => {
     if (analysis?.alternativeText) {
@@ -288,63 +325,57 @@ export function ComposeArea({ selectedPreset, allPresets, activeTab, onTabChange
   };
 
   // Quick adjustment functions - preset aware
-  const adjustTone = (adjustment: 'calmer' | 'warmer' | 'shorter' | 'emoji' | 'formal' | 'energetic') => {
-    let adjusted = message;
-    
-    switch (adjustment) {
-      case 'calmer':
-        // Reduce exclamation marks and all caps
-        adjusted = message
-          .replace(/!+/g, (match) => match.length > 1 ? '.' : '.')
-          .replace(/([A-Z]{2,})/g, (match) => match.charAt(0) + match.slice(1).toLowerCase());
-        break;
-      case 'warmer':
-        // Add friendly elements based on preset
-        if (selectedPreset === 'professional') {
-          adjusted = message + ' Thank you.';
-        } else if (!message.includes('!') && !message.endsWith('😊')) {
-          adjusted = message.replace(/\.$/, '!');
-        }
-        break;
-      case 'shorter':
-        // Simplify
-        adjusted = message.split('.')[0] + (message.includes('?') ? '?' : '.');
-        break;
-      case 'emoji':
-        // Add appropriate emoji based on preset
-        if (!message.match(/[\u{1F300}-\u{1F9FF}]/u)) {
-          if (selectedPreset === 'professional') {
-            // Don't add emoji for professional - no change
-            adjusted = message;
-          } else if (selectedPreset === 'enthusiastic') {
-            adjusted = message.trim() + ' 🎉';
-          } else {
-            adjusted = message.trim() + ' 😊';
-          }
-        }
-        break;
-      case 'formal':
-        // Make more formal
-        adjusted = message
-          .replace(/gonna/gi, 'going to')
-          .replace(/wanna/gi, 'want to')
-          .replace(/!/g, '.')
-          .replace(/\?$/, '.');
-        break;
-      case 'energetic':
-        // Add energy
-        if (!message.includes('!')) {
-          adjusted = message.replace(/\.$/, '!');
-        }
-        if (!message.match(/[\u{1F300}-\u{1F9FF}]/u)) {
-          adjusted = adjusted + ' ✨';
-        }
-        break;
+  const adjustTone = async (
+    adjustment: 'calmer' | 'warmer' | 'shorter' | 'emoji' | 'formal' | 'energetic'
+  ) => {
+    if (!message.trim()) return;
+    setIsAnalyzing(true);
+
+    try {
+      // describe what kind of rewrite we want
+      let targetTone: string;
+      switch (adjustment) {
+        case 'calmer':
+          targetTone = 'calm, de-escalating, non-confrontational';
+          break;
+        case 'warmer':
+          targetTone = 'warm, friendly, supportive';
+          break;
+        case 'shorter':
+          targetTone = 'short, concise, to-the-point but polite';
+          break;
+        case 'emoji':
+          targetTone = 'similar meaning but a bit more playful with light emoji';
+          break;
+        case 'formal':
+          targetTone = 'formal, professional, respectful';
+          break;
+        case 'energetic':
+          targetTone = 'more energetic and enthusiastic';
+          break;
+      }
+
+      const styleLabel =
+        currentPresetData?.guidelines?.targetTone ||
+        currentPresetData?.name ||
+        selectedPreset;
+
+      const rewrite = await rewriteTone(
+        message,
+        `${styleLabel} – ${targetTone}`
+      );
+
+      if (rewrite.suggestions && rewrite.suggestions.length > 0) {
+        setMessage(rewrite.suggestions[0]);   // update textbox with AI rewrite
+        setAnalysis(null);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAnalyzing(false);
     }
-    
-    setMessage(adjusted);
-    setAnalysis(null);
   };
+
 
   const exampleMessages = [
     "I'll be there later!!!",
