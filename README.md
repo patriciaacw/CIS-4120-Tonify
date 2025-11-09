@@ -29,16 +29,21 @@ export OPENAI_API_KEY="sk-your-api-key-here"
 
 ## Running the Application
 
-### Prerequisites
+### Step 1: Start the Backend Server
 
-Before starting the frontend, set your OpenAI API key in the terminal:
+In your terminal, set your OpenAI API key and start the server:
 ```bash
 export OPENAI_API_KEY="sk-your-api-key-here"
+node server.js
 ```
 
-### Frontend
+Keep this terminal window running.
 
-1. Install dependencies:
+### Step 2: Start the Frontend
+
+Open a **new terminal window** and run:
+
+1. Install dependencies (first time only):
 ```bash
 npm install
 ```
@@ -59,6 +64,7 @@ CIS-4120-Tonify/
 │   ├── services/        # API services (Firebase, OpenAI)
 │   ├── guidelines/      # Design guidelines
 │   └── styles/          # CSS and styling
+├── server.js            # Backend server for AI tone analysis
 ├── .env                 # Environment variables (not in repo)
 ├── .env.example        # Environment template
 ├── package.json        # Dependencies
@@ -69,7 +75,11 @@ CIS-4120-Tonify/
 - Verify your API key is correctly exported in the terminal: `echo $OPENAI_API_KEY`
 - Ensure you have credits available in your OpenAI account
 - Check that the API key has the correct permissions
-- Remember to export the key in each new terminal session
+- Remember to export the key in each new terminal session before running `node server.js`
+### Backend server errors
+- Make sure you exported the OpenAI API key before running `node server.js`
+- Check that the server is running (you should see a message like "Server running on port 3001")
+- Ensure the port isn't already in use by another application
 ### Development server won't start
 - Delete `node_modules` and reinstall: `rm -rf node_modules && npm install`
 - Clear npm cache: `npm cache clean --force`
