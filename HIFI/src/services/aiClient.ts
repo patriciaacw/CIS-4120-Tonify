@@ -1,3 +1,4 @@
+//Generated with assistance from Chat GPT – Nov 8, 2025
 // src/services/aiClient.ts
 
 const BASE_URL = "http://localhost:4000";
