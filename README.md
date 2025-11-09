@@ -65,9 +65,6 @@ CIS-4120-Tonify/
 └── README.md          # This file
 ```
 ## Troubleshooting
-### "Property 'env' does not exist on type 'ImportMeta'"
-- Ensure `src/vite-env.d.ts` exists with proper type definitions
-- Restart VS Code's TypeScript server: Cmd+Shift+P → "TypeScript: Restart TS Server"
 ### OpenAI API errors
 - Verify your API key is correctly exported in the terminal: `echo $OPENAI_API_KEY`
 - Ensure you have credits available in your OpenAI account
