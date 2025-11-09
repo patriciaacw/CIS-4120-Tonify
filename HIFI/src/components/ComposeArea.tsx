@@ -325,63 +325,57 @@ export function ComposeArea({ selectedPreset, allPresets, activeTab, onTabChange
   };
 
   // Quick adjustment functions - preset aware
-  const adjustTone = (adjustment: 'calmer' | 'warmer' | 'shorter' | 'emoji' | 'formal' | 'energetic') => {
-    let adjusted = message;
-    
-    switch (adjustment) {
-      case 'calmer':
-        // Reduce exclamation marks and all caps
-        adjusted = message
-          .replace(/!+/g, (match) => match.length > 1 ? '.' : '.')
-          .replace(/([A-Z]{2,})/g, (match) => match.charAt(0) + match.slice(1).toLowerCase());
-        break;
-      case 'warmer':
-        // Add friendly elements based on preset
-        if (selectedPreset === 'professional') {
-          adjusted = message + ' Thank you.';
-        } else if (!message.includes('!') && !message.endsWith('😊')) {
-          adjusted = message.replace(/\.$/, '!');
-        }
-        break;
-      case 'shorter':
-        // Simplify
-        adjusted = message.split('.')[0] + (message.includes('?') ? '?' : '.');
-        break;
-      case 'emoji':
-        // Add appropriate emoji based on preset
-        if (!message.match(/[\u{1F300}-\u{1F9FF}]/u)) {
-          if (selectedPreset === 'professional') {
-            // Don't add emoji for professional - no change
-            adjusted = message;
-          } else if (selectedPreset === 'enthusiastic') {
-            adjusted = message.trim() + ' 🎉';
-          } else {
-            adjusted = message.trim() + ' 😊';
-          }
-        }
-        break;
-      case 'formal':
-        // Make more formal
-        adjusted = message
-          .replace(/gonna/gi, 'going to')
-          .replace(/wanna/gi, 'want to')
-          .replace(/!/g, '.')
-          .replace(/\?$/, '.');
-        break;
-      case 'energetic':
-        // Add energy
-        if (!message.includes('!')) {
-          adjusted = message.replace(/\.$/, '!');
-        }
-        if (!message.match(/[\u{1F300}-\u{1F9FF}]/u)) {
-          adjusted = adjusted + ' ✨';
-        }
-        break;
+  const adjustTone = async (
+    adjustment: 'calmer' | 'warmer' | 'shorter' | 'emoji' | 'formal' | 'energetic'
+  ) => {
+    if (!message.trim()) return;
+    setIsAnalyzing(true);
+
+    try {
+      // describe what kind of rewrite we want
+      let targetTone: string;
+      switch (adjustment) {
+        case 'calmer':
+          targetTone = 'calm, de-escalating, non-confrontational';
+          break;
+        case 'warmer':
+          targetTone = 'warm, friendly, supportive';
+          break;
+        case 'shorter':
+          targetTone = 'short, concise, to-the-point but polite';
+          break;
+        case 'emoji':
+          targetTone = 'similar meaning but a bit more playful with light emoji';
+          break;
+        case 'formal':
+          targetTone = 'formal, professional, respectful';
+          break;
+        case 'energetic':
+          targetTone = 'more energetic and enthusiastic';
+          break;
+      }
+
+      const styleLabel =
+        currentPresetData?.guidelines?.targetTone ||
+        currentPresetData?.name ||
+        selectedPreset;
+
+      const rewrite = await rewriteTone(
+        message,
+        `${styleLabel} – ${targetTone}`
+      );
+
+      if (rewrite.suggestions && rewrite.suggestions.length > 0) {
+        setMessage(rewrite.suggestions[0]);   // update textbox with AI rewrite
+        setAnalysis(null);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAnalyzing(false);
     }
-    
-    setMessage(adjusted);
-    setAnalysis(null);
   };
+
 
   const exampleMessages = [
     "I'll be there later!!!",
