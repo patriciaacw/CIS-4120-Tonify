@@ -1,3 +1,5 @@
+//Generated with assistance from Chat GPT – Nov 8, 2025
+
 // server.js
 const express = require("express");
 const cors = require("cors");
