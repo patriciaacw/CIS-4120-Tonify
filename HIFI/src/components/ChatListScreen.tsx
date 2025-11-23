@@ -15,9 +15,11 @@ export interface Chat {
 }
 
 interface ChatListScreenProps {
+  userId: string;
   onChatSelect: (chatId: string) => void;
   onCreateChat: () => void;
   customChats?: Record<string, { name: string; isGroup: boolean }>;
+  chatPreviews?: Record<string, { lastMessage: string; timestamp: string }>;
 }
 
 const mockChats: Chat[] = [
@@ -113,12 +115,12 @@ const mockChats: Chat[] = [
   }
 ];
 
-export function ChatListScreen({ onChatSelect, onCreateChat, customChats }: ChatListScreenProps) {
+export function ChatListScreen({ userId, onChatSelect, onCreateChat, customChats, chatPreviews,}: ChatListScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Merge custom chats with mock chats
   const allChats = React.useMemo(() => {
-    const customChatsList: Chat[] = customChats 
+    // Convert customChats into Chat objects, avoiding duplicates with mockChats
+    const customChatsList: Chat[] = customChats
       ? Object.entries(customChats)
           .filter(([id]) => !mockChats.find(c => c.id === id))
           .map(([id, details]) => ({
@@ -132,9 +134,24 @@ export function ChatListScreen({ onChatSelect, onCreateChat, customChats }: Chat
             participants: details.isGroup ? details.name.split(', ') : undefined
           }))
       : [];
-    
-    return [...customChatsList, ...mockChats];
-  }, [customChats]);
+  
+    // Merge custom + mock
+    const merged = [...customChatsList, ...mockChats];
+  
+    // Apply live chat preview overrides (if any exist)
+    return merged.map(chat => {
+      const preview = chatPreviews?.[chat.id];
+      if (!preview) return chat;
+  
+      return {
+        ...chat,
+        lastMessage: preview.lastMessage,
+        timestamp: preview.timestamp,
+        unread: 0, // update logic later if desired
+      };
+    });
+  }, [customChats, chatPreviews]); // Add chatPreviews to dependencies
+  
 
   const filteredChats = searchQuery.trim()
     ? allChats.filter(chat =>

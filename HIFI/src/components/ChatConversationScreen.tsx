@@ -7,6 +7,7 @@ import { SuggestedReplies } from './SuggestedReplies';
 import { TonePreset } from './ToneSettings';
 import { useAccessibility } from './AccessibilitySettings';
 import { useToneSettings } from './ToneSettingsContext';
+import { sendMessage, subscribeToMessages } from '../services/messageService';
 
 interface Message {
   id: string;
@@ -27,6 +28,7 @@ interface Message {
 }
 
 interface ChatConversationScreenProps {
+  userId: string;
   chatId: string;
   chatName: string;
   isGroup: boolean;
@@ -35,6 +37,7 @@ interface ChatConversationScreenProps {
   allPresets: TonePreset[];
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  onMessagePreviewUpdate?: (chatId: string, text: string, timestamp?: number) => void;
 }
 
 // Mock conversation data
@@ -219,6 +222,7 @@ const analyzeTone = (text: string, preset: string, presetData?: TonePreset) => {
 };
 
 export function ChatConversationScreen({ 
+  userId,
   chatId, 
   chatName, 
   isGroup, 
@@ -226,9 +230,19 @@ export function ChatConversationScreen({
   selectedPreset,
   allPresets,
   activeTab = 'messages',
-  onTabChange = () => {}
+  onTabChange = () => {}, 
+  onMessagePreviewUpdate,
 }: ChatConversationScreenProps) {
-  const [messages, setMessages] = useState<Message[]>(getConversationMessages(chatId));
+  // Hard-coded “seed” messages for each chat
+  const [mockMessages, setMockMessages] = useState<Message[]>(
+    () => getConversationMessages(chatId)
+  );
+
+  // Live messages coming from Firebase
+  const [liveMessages, setLiveMessages] = useState<Message[]>([]);
+
+  // Derived list used by the UI
+  const allMessages = [...mockMessages, ...liveMessages];
   const [inputText, setInputText] = useState('');
   const [expandedTone, setExpandedTone] = useState<string | null>(null);
   const [showRepliesFor, setShowRepliesFor] = useState<string | null>(null);
@@ -240,13 +254,44 @@ export function ChatConversationScreen({
 
   const currentPresetData = allPresets.find(p => p.id === selectedPreset);
 
+  useEffect(() => {
+    setMockMessages(getConversationMessages(chatId));
+  }, [chatId]);  
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [allMessages.length]);
 
+
+  useEffect(() => {
+    if (!chatId) return;
+  
+    const unsubscribe = subscribeToMessages(chatId, (fbMessages) => {
+      const mapped: Message[] = fbMessages.map((m) => ({
+        id: m.id || Math.random().toString(),
+        text: m.text,
+        sender: m.userId === userId ? 'me' : 'them',
+        timestamp: new Date(m.timestamp || Date.now()).toLocaleTimeString(
+          'en-US',
+          { hour: 'numeric', minute: '2-digit' }
+        ),
+      }));
+      setLiveMessages(mapped);
+    
+      // ✅ update preview for this chat
+      if (fbMessages.length && onMessagePreviewUpdate) {
+        const latest = fbMessages[fbMessages.length - 1];
+        onMessagePreviewUpdate(chatId, latest.text, latest.timestamp);
+      }
+    });
+  
+    return unsubscribe;
+  }, [chatId, userId]);
+  
+  
   // Live tone analysis - Always enabled
   useEffect(() => {
     if (inputText.trim()) {
@@ -260,19 +305,27 @@ export function ChatConversationScreen({
     }
   }, [inputText, selectedPreset, currentPresetData]);
 
-  const handleSend = () => {
-    if (inputText.trim()) {
-      const newMessage: Message = {
-        id: Date.now().toString(),
+  const handleSend = async () => {
+    if (!inputText.trim()) return;
+  
+    try {
+      await sendMessage(chatId, {
         text: inputText,
-        sender: 'me',
-        timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-      };
-      setMessages([...messages, newMessage]);
+        userId,
+        chatId,
+        tone: liveAnalysis?.label,        // optional, can be undefined
+        confidence: liveAnalysis?.confidence,
+      });
+  
       setInputText('');
       setLiveAnalysis(null);
+      // No need to manually update messages:
+      // subscribeToMessages will fire and update liveMessages.
+    } catch (err) {
+      console.error('Failed to send message:', err);
     }
   };
+  
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -371,7 +424,7 @@ export function ChatConversationScreen({
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto bg-white px-4 py-3">
         <div className="space-y-4">
-          {messages.map((message) => (
+          {allMessages.map((message) => (
             <div
               key={message.id}
               className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}

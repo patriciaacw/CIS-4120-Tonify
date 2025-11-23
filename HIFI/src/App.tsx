@@ -11,6 +11,10 @@ import { ToneSettingsProvider } from './components/ToneSettingsContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { MessageCircle, Settings, Sparkles, FlaskConical } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
+/*
+import { ref, set, onValue } from "firebase/database";
+import { database } from "./config/firebase";
+*/
 
 // Chat details lookup - now as state that can be updated
 const initialChatDetails: Record<string, { name: string; isGroup: boolean }> = {
@@ -35,6 +39,51 @@ export default function App() {
   const [showCreateChat, setShowCreateChat] = useState(false);
   const [chatDetails, setChatDetails] = useState(initialChatDetails);
   const [nextChatId, setNextChatId] = useState(11);
+  // NEW: each tab gets its own user by ?user=user1 or ?user=user2
+  const params = new URLSearchParams(window.location.search);
+  const urlUser = params.get("user");
+  const [userId] = useState(urlUser ?? "user1");
+
+  const [chatPreviews, setChatPreviews] = useState<
+    Record<string, { lastMessage: string; timestamp: string }>
+  >({});
+
+  const handleMessagePreviewUpdate = (
+    chatId: string,
+    text: string,
+    timestamp?: number
+  ) => {
+    const timeString = new Date(
+      timestamp ?? Date.now()
+    ).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  
+    setChatPreviews(prev => ({
+      ...prev,
+      [chatId]: { lastMessage: text, timestamp: timeString },
+    }));
+  };
+  
+
+  /*
+  // --- FIREBASE TEST CONNECTION ---
+useEffect(() => {
+  const testRef = ref(database, "debug/testNode");
+
+  // Write data to confirm connection
+  set(testRef, {
+    message: "Hello from Tonify!",
+    timestamp: Date.now(),
+  })
+    .then(() => console.log("🔥 Firebase write successful"))
+    .catch((err) => console.error("❌ Firebase write error", err));
+
+  // Subscribe to read changes
+  onValue(testRef, (snapshot) => {
+    console.log("📡 Firebase read:", snapshot.val());
+  });
+}, []);
+// --- END FIREBASE TEST CONNECTION ---
+*/
 
   // Reset chat selection when switching tabs
   useEffect(() => {
@@ -116,6 +165,7 @@ export default function App() {
               <TabsContent value="messages" className="m-0 p-0 flex-1 min-h-0 overflow-hidden">
                 {selectedChatId ? (
                   <ChatConversationScreen
+                    userId={userId}    
                     chatId={selectedChatId}
                     chatName={chatDetails[selectedChatId]?.name || 'Chat'}
                     isGroup={chatDetails[selectedChatId]?.isGroup || false}
@@ -124,12 +174,15 @@ export default function App() {
                     allPresets={allPresets}
                     activeTab={activeTab}
                     onTabChange={setActiveTab}
+                    onMessagePreviewUpdate={handleMessagePreviewUpdate}
                   />
                 ) : (
                   <ChatListScreen 
+                    userId={userId}
                     onChatSelect={handleChatSelect}
                     onCreateChat={handleCreateChat}
                     customChats={chatDetails}
+                    chatPreviews={chatPreviews}  
                   />
                 )}
               </TabsContent>
