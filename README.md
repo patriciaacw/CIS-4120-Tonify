@@ -6,7 +6,7 @@ Tonify is an iMessage add-in app that detects and clarifies tone in text message
 - **Assignment**: A5 - Implementation Prototypes
 ## Prerequisites
 Before running this project, ensure you have the following installed:
-- [Node.js](https://nodejs.org/) (v16 or higher)
+- [Node.js](https://nodejs.org/) (v18 or higher)
 - npm (comes with Node.js)
 - An OpenAI API key
 ## Setup Instructions
