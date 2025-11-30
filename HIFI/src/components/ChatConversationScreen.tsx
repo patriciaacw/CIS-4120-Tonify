@@ -242,7 +242,7 @@ export function ChatConversationScreen({
   const [liveMessages, setLiveMessages] = useState<Message[]>([]);
 
   // Derived list used by the UI
-  const allMessages = [...mockMessages, ...liveMessages];
+  const allMessages = liveMessages.length > 0 ? liveMessages : mockMessages;
   const [inputText, setInputText] = useState('');
   const [expandedTone, setExpandedTone] = useState<string | null>(null);
   const [showRepliesFor, setShowRepliesFor] = useState<string | null>(null);
