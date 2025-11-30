@@ -187,44 +187,30 @@ export function ToneSettings({ selectedPreset, onPresetChange, onPresetsChange, 
     <div className="h-full flex flex-col overflow-hidden bg-white">
       {/* Tab Navigation Bar with Status Bar Spacing */}
       <div className="pt-[44px] bg-[#F6F6F6] shrink-0">
-        <div className="w-full grid grid-cols-4 rounded-none border-b border-[#E5E5EA] bg-[#F9F9F9]/95 backdrop-blur-xl h-[49px]">
-        <button 
-          onClick={() => onTabChange?.('messages')}
-          className="flex flex-col items-center justify-center gap-[2px] text-[#8E8E93] hover:text-[#007AFF] transition-colors"
-        >
-          <MessageCircle className="w-[25px] h-[25px]" strokeWidth={2} />
-          <span className="text-[10px]">Messages</span>
-        </button>
-        <button 
-          onClick={() => onTabChange?.('compose')}
-          className="flex flex-col items-center justify-center gap-[2px] text-[#8E8E93] hover:text-[#007AFF] transition-colors"
-        >
-          <Sparkles className="w-[25px] h-[25px]" strokeWidth={2} />
-          <span className="text-[10px]">Compose</span>
-        </button>
-        <button className="flex flex-col items-center justify-center gap-[2px] text-[#007AFF]">
-          <Settings className="w-[25px] h-[25px]" strokeWidth={2} />
-          <span className="text-[10px]">Settings</span>
-        </button>
-        <button 
-          onClick={() => onTabChange?.('requirements')}
-          className="flex flex-col items-center justify-center gap-[2px] text-[#8E8E93] hover:text-[#007AFF] transition-colors"
-        >
-          <FlaskConical className="w-[25px] h-[25px]" strokeWidth={2} />
-          <span className="text-[10px]">Demo</span>
-        </button>
+        <div className="w-full grid grid-cols-3 place-items-center rounded-none border-b border-[#E5E5EA] bg-[#F9F9F9]/95 backdrop-blur-xl h-[49px]">
+          
+          <button 
+            onClick={() => onTabChange?.('messages')}
+            className="flex flex-col items-center justify-center gap-[2px] text-[#8E8E93] hover:text-[#007AFF] transition-colors"
+          >
+            <MessageCircle className="w-[25px] h-[25px]" strokeWidth={2} />
+            <span className="text-[10px]">Messages</span>
+          </button>
+      
+          <button 
+            onClick={() => onTabChange?.('compose')}
+            className="flex flex-col items-center justify-center gap-[2px] text-[#8E8E93] hover:text-[#007AFF] transition-colors"
+          >
+            <Sparkles className="w-[25px] h-[25px]" strokeWidth={2} />
+            <span className="text-[10px]">Compose</span>
+          </button>
+      
+          <button className="flex flex-col items-center justify-center gap-[2px] text-[#007AFF]">
+            <Settings className="w-[25px] h-[25px]" strokeWidth={2} />
+            <span className="text-[10px]">Settings</span>
+          </button>
         </div>
       </div>
-
-      <div className="flex-1 overflow-y-auto bg-white">
-        <div className="p-4 pb-6 space-y-5">
-        {/* Header */}
-        <div>
-          <h2 className="text-gray-900 mb-1.5 text-[17px]">Tone Style Presets</h2>
-          <p className="text-[13px] text-gray-600 leading-[1.4]">
-            Choose a tone profile to guide your messaging style.
-          </p>
-        </div>
 
         {/* Preset Cards */}
         <div className="space-y-2.5">
