@@ -1,3 +1,4 @@
+//Generated with assistance from Chat GPT – Nov 30, 2025
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Search, Edit3, ChevronRight } from 'lucide-react';
@@ -159,6 +160,23 @@ export function ChatListScreen({ userId, onChatSelect, onCreateChat, customChats
         chat.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : allChats;
+
+  // NEW: sort so chats with latest previews appear first
+  const sortedChats = [...filteredChats].sort((a, b) => {
+    const aPreview = chatPreviews?.[a.id];
+    const bPreview = chatPreviews?.[b.id];
+  
+    // Chats with live previews (recent messages) come first
+    if (!!aPreview && !bPreview) return -1;
+    if (!aPreview && !!bPreview) return 1;
+  
+    // If both have previews, fall back to timestamp string
+    if (aPreview && bPreview) {
+      return bPreview.timestamp.localeCompare(aPreview.timestamp);
+    }
+  
+    return 0;
+  });
 
   const getGroupAvatar = (participants?: string[]) => {
     if (!participants || participants.length === 0) return 'GR';
