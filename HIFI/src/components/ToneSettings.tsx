@@ -446,7 +446,7 @@ export function ToneSettings({ selectedPreset, onPresetChange, onPresetsChange, 
                           <Volume2 className="w-4 h-4 text-gray-600 shrink-0" />
                           <div className="flex-1 min-w-0">
                             <div className="text-[14px] text-gray-900">Read Aloud Feature</div>
-                            <div className="text-[12px] text-gray-600 mt-0.5">Read messages in corresponding tone</div>
+                            <div className="text-[12px] text-gray-600 mt-0.5">Read tone context aloud</div>
                           </div>
                         </div>
                         <Switch
