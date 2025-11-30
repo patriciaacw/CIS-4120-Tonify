@@ -382,43 +382,38 @@ export function ChatConversationScreen({
       </div>
 
       {/* Tab Navigation Bar */}
-      <div className="w-full grid grid-cols-4 rounded-none border-b border-[#E5E5EA] bg-[#F9F9F9]/95 backdrop-blur-xl h-[49px] shrink-0">
+      <div className="w-full flex justify-around border-b border-[#E5E5EA] bg-[#F9F9F9]/95 backdrop-blur-xl h-[49px] shrink-0">
+
         <button
-          onClick={() => onTabChange('messages')}
-          className={`flex flex-col items-center justify-center gap-[2px] transition-colors ${
-            activeTab === 'messages' ? 'text-[#007AFF]' : 'text-[#8E8E93]'
-          }`}
+            onClick={() => onTabChange('messages')}
+            className={`flex flex-col items-center justify-center gap-[2px] transition-colors ${
+                activeTab === 'messages' ? 'text-[#007AFF]' : 'text-[#8E8E93]'
+            }`}
         >
           <MessageCircle className="w-[25px] h-[25px]" strokeWidth={2} />
           <span className="text-[10px]">Messages</span>
         </button>
+
         <button
-          onClick={() => onTabChange('compose')}
-          className={`flex flex-col items-center justify-center gap-[2px] transition-colors ${
-            activeTab === 'compose' ? 'text-[#007AFF]' : 'text-[#8E8E93]'
-          }`}
+            onClick={() => onTabChange('compose')}
+            className={`flex flex-col items-center justify-center gap-[2px] transition-colors ${
+                activeTab === 'compose' ? 'text-[#007AFF]' : 'text-[#8E8E93]'
+            }`}
         >
           <Sparkles className="w-[25px] h-[25px]" strokeWidth={2} />
           <span className="text-[10px]">Compose</span>
         </button>
+
         <button
-          onClick={() => onTabChange('settings')}
-          className={`flex flex-col items-center justify-center gap-[2px] transition-colors ${
-            activeTab === 'settings' ? 'text-[#007AFF]' : 'text-[#8E8E93]'
-          }`}
+            onClick={() => onTabChange('settings')}
+            className={`flex flex-col items-center justify-center gap-[2px] transition-colors ${
+                activeTab === 'settings' ? 'text-[#007AFF]' : 'text-[#8E8E93]'
+            }`}
         >
           <Settings className="w-[25px] h-[25px]" strokeWidth={2} />
           <span className="text-[10px]">Settings</span>
         </button>
-        <button
-          onClick={() => onTabChange('requirements')}
-          className={`flex flex-col items-center justify-center gap-[2px] transition-colors ${
-            activeTab === 'requirements' ? 'text-[#007AFF]' : 'text-[#8E8E93]'
-          }`}
-        >
-          <FlaskConical className="w-[25px] h-[25px]" strokeWidth={2} />
-          <span className="text-[10px]">Demo</span>
-        </button>
+
       </div>
 
       {/* Messages */}
