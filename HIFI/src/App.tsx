@@ -45,6 +45,23 @@ export default function App() {
   const urlUser = params.get("user");
   const [userId] = useState(urlUser ?? "user1");
 
+  // Use chat "1" as the cross-device demo chat
+const DEMO_CHAT_ID = '1';
+
+// Map: "who am I" -> "who I'm chatting with"
+const demoPeerName: Record<string, string> = {
+  user1: 'Mehak',
+  user2: 'Riya',
+  phone1: 'phone2',
+  phone2: 'phone1',
+};
+
+const computedChatName = !selectedChatId
+  ? 'Chat'
+  : selectedChatId === DEMO_CHAT_ID
+    ? demoPeerName[userId] || chatDetails[selectedChatId]?.name || 'Chat'
+    : chatDetails[selectedChatId]?.name || 'Chat';
+
   const [chatPreviews, setChatPreviews] = useState<
     Record<string, { lastMessage: string; timestamp: string }>
   >({});
@@ -190,7 +207,7 @@ useEffect(() => {
                   <ChatConversationScreen
                     userId={userId}    
                     chatId={selectedChatId}
-                    chatName={chatDetails[selectedChatId]?.name || 'Chat'}
+                    chatName={computedChatName}
                     isGroup={chatDetails[selectedChatId]?.isGroup || false}
                     onBack={handleBackToList}
                     selectedPreset={selectedPreset}
