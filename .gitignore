@@ -1,1 +1,17 @@
+# Dependencies
+node_modules/
+
+# Local dev stuff
+dist/
+build/
 .env
+.env.local
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Vite
+.vite/
+
+# MacOS junk
+.DS_Store
