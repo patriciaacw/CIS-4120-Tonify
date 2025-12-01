@@ -1,3 +1,4 @@
+//Generated with assistance from Chat GPT – Nov 30, 2025
 import React, { useState, useEffect } from 'react';
 import { ChatListScreen } from './components/ChatListScreen';
 import { ChatConversationScreen } from './components/ChatConversationScreen';
@@ -117,28 +118,50 @@ useEffect(() => {
     setShowCreateChat(true);
   };
 
-  const handleChatCreate = (contactIds: string[], contacts: { id: string; name: string; avatar: string }[]) => {
-    // Create a new chat ID
+  const handleChatCreate = (
+    contactIds: string[],
+    contacts: { id: string; name: string; avatar: string }[]
+  ) => {
+    if (contacts.length === 0) return;
+  
+    const isGroup = contacts.length > 1;
+  
+    // If it's a 1:1 chat, check if we already have a chat with this person
+    if (!isGroup) {
+      const selectedName = contacts[0].name;
+  
+      const existingEntry = Object.entries(chatDetails).find(
+        ([, chat]) => !chat.isGroup && chat.name === selectedName
+      );
+  
+      if (existingEntry) {
+        const [existingChatId] = existingEntry;
+  
+        // Open the existing conversation instead of creating a duplicate
+        setSelectedChatId(existingChatId);
+        setShowCreateChat(false);
+        return;
+      }
+    }
+  
+    // Otherwise create a brand-new chat
     const newChatId = String(nextChatId);
     setNextChatId(prev => prev + 1);
-    
-    // Determine chat name based on number of contacts
-    const isGroup = contacts.length > 1;
-    const chatName = isGroup 
-      ? contacts.map(c => c.name.split(' ')[0]).join(', ') 
+  
+    const chatName = isGroup
+      ? contacts.map(c => c.name.split(' ')[0]).join(', ')
       : contacts[0].name;
-    
-    // Add the new chat to chatDetails
+  
     setChatDetails(prev => ({
       ...prev,
       [newChatId]: {
         name: chatName,
-        isGroup
-      }
+        isGroup,
+      },
     }));
-    
-    // Navigate to the new chat
+  
     setSelectedChatId(newChatId);
+    setShowCreateChat(false);
   };
 
   return (
