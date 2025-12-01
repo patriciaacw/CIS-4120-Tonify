@@ -15,6 +15,7 @@ interface ComposeAreaProps {
   allPresets: TonePreset[];
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  onSend?: (text: string) => void;
 }
 
 interface ToneAnalysis {
@@ -316,6 +317,17 @@ export function ComposeArea({ selectedPreset, allPresets, activeTab, onTabChange
       setIsAnalyzing(false);
     }
   };
+
+    const handleSend = () => {
+    if (!message.trim()) return;
+  
+
+    const textToSend = analysis?.alternativeText || message;
+  
+    onSend?.(textToSend);
+
+  };
+
 
 
   const applyAlternative = () => {
@@ -734,6 +746,7 @@ export function ComposeArea({ selectedPreset, allPresets, activeTab, onTabChange
                   Edit Message
                 </Button>
                 <Button className="flex-1 bg-[#34C759] hover:bg-[#2FB350]">
+                  onClick={handleSend}
                   <Send className="w-4 h-4 mr-2" />
                   Send
                 </Button>
