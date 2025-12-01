@@ -43,74 +43,6 @@ interface ChatConversationScreenProps {
   onMessagePreviewUpdate?: (chatId: string, text: string, timestamp?: number) => void;
 }
 
-
-// Mock conversation data (still fine to use for seed/demo messages)
-const getConversationMessages = (chatId: string): Message[] => {
-  const conversations: Record<string, Message[]> = {
-    '1': [
-      {
-        id: '1',
-        text: "Hey! Want to grab lunch tomorrow?",
-        sender: 'them',
-        senderName: 'Sarah',
-        timestamp: '10:23 AM'
-      },
-      {
-        id: '2',
-        text: "Yeah sounds good!",
-        sender: 'me',
-        timestamp: '10:25 AM'
-      },
-      {
-        id: '3',
-        text: "fine.",
-        sender: 'them',
-        senderName: 'Sarah',
-        timestamp: '2:15 PM'
-      }
-    ],
-    '2': [
-      {
-        id: '1',
-        text: "I just got the internship at Google!",
-        sender: 'me',
-        timestamp: '3:42 PM'
-      },
-      {
-        id: '2',
-        text: "wow really?",
-        sender: 'them',
-        senderName: 'Mike',
-        timestamp: '3:45 PM'
-      }
-    ],
-    '3': [
-      {
-        id: '1',
-        text: "Hey everyone! Can we meet tomorrow to review?",
-        sender: 'them',
-        senderName: 'Alex',
-        timestamp: '4:05 PM'
-      },
-      {
-        id: '2',
-        text: "Works for me!",
-        sender: 'them',
-        senderName: 'Jordan',
-        timestamp: '4:07 PM'
-      },
-      {
-        id: '3',
-        text: "Yeah I can make it",
-        sender: 'me',
-        timestamp: '4:09 PM'
-      }
-    ]
-  };
-
-  return conversations[chatId] || [];
-};
-
 export function ChatConversationScreen({
                                          userId,
                                          chatId,
@@ -124,16 +56,8 @@ export function ChatConversationScreen({
                                          onMessagePreviewUpdate,
                                        }: ChatConversationScreenProps) {
 
-  // Local seed messages
-  const [mockMessages, setMockMessages] = useState<Message[]>(
-      () => getConversationMessages(chatId)
-  );
-
   // Firebase messages
   const [liveMessages, setLiveMessages] = useState<Message[]>([]);
-
-  // Combined list for UI
-  const allMessages = [...mockMessages, ...liveMessages];
 
   const [inputText, setInputText] = useState('');
   const [expandedTone, setExpandedTone] = useState<string | null>(null);
@@ -147,10 +71,7 @@ export function ChatConversationScreen({
 
   const currentPresetData = allPresets.find(p => p.id === selectedPreset);
 
-  useEffect(() => {
-    setMockMessages(getConversationMessages(chatId));
-  }, [chatId]);
-
+  const allMessages = liveMessages;
 
   // ⭐ Firebase + AI tone classification
   useEffect(() => {

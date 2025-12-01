@@ -17,18 +17,9 @@ import { ref, set, onValue } from "firebase/database";
 import { database } from "./config/firebase";
 */
 
-// Chat details lookup - now as state that can be updated
+// Chat details lookup - now a single demo chat
 const initialChatDetails: Record<string, { name: string; isGroup: boolean }> = {
-  '1': { name: 'Sarah Mitchell', isGroup: false },
-  '2': { name: 'Mike Chen', isGroup: false },
-  '3': { name: 'Study Group', isGroup: true },
-  '4': { name: 'Mom', isGroup: false },
-  '5': { name: 'Project Team', isGroup: true },
-  '6': { name: 'Alex Rivera', isGroup: false },
-  '7': { name: 'Jordan Lee', isGroup: false },
-  '8': { name: 'Family', isGroup: true },
-  '9': { name: 'Taylor Kim', isGroup: false },
-  '10': { name: 'Book Club', isGroup: true },
+  '1': { name: 'Mehak ↔ Riya demo', isGroup: false },
 };
 
 export default function App() {
@@ -39,7 +30,7 @@ export default function App() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [showCreateChat, setShowCreateChat] = useState(false);
   const [chatDetails, setChatDetails] = useState(initialChatDetails);
-  const [nextChatId, setNextChatId] = useState(11);
+  const [nextChatId, setNextChatId] = useState(2);
   // NEW: each tab gets its own user by ?user=user1 or ?user=user2
   const params = new URLSearchParams(window.location.search);
   const urlUser = params.get("user");
@@ -181,6 +172,20 @@ useEffect(() => {
     setShowCreateChat(false);
   };
 
+  const displayChatDetails = React.useMemo(() => {
+    const base = { ...chatDetails };
+    const peer = demoPeerName[userId];
+  
+    if (peer && base[DEMO_CHAT_ID]) {
+      base[DEMO_CHAT_ID] = {
+        ...base[DEMO_CHAT_ID],
+        name: peer, // 👈 show the *other person’s* name in the list
+      };
+    }
+  
+    return base;
+  }, [chatDetails, userId]);  
+
   return (
     <AccessibilityProvider>
       <ToneSettingsProvider>
@@ -221,7 +226,7 @@ useEffect(() => {
                     userId={userId}
                     onChatSelect={handleChatSelect}
                     onCreateChat={handleCreateChat}
-                    customChats={chatDetails}
+                    customChats={displayChatDetails}
                     chatPreviews={chatPreviews}  
                   />
                 )}

@@ -23,135 +23,32 @@ interface ChatListScreenProps {
   chatPreviews?: Record<string, { lastMessage: string; timestamp: string }>;
 }
 
-const mockChats: Chat[] = [
-  {
-    id: '1',
-    name: 'Sarah Mitchell',
-    isGroup: false,
-    lastMessage: "No sorry! I'm just stressed about work",
-    timestamp: '2:18 PM',
-    unread: 2,
-    avatar: 'SM'
-  },
-  {
-    id: '2',
-    name: 'Mike Chen',
-    isGroup: false,
-    lastMessage: "wow really?",
-    timestamp: '3:45 PM',
-    unread: 1,
-    avatar: 'MC'
-  },
-  {
-    id: '3',
-    name: 'Study Group',
-    isGroup: true,
-    lastMessage: "Alex: Can we meet tomorrow?",
-    timestamp: '4:12 PM',
-    unread: 0,
-    participants: ['Alex', 'Jordan', 'Taylor']
-  },
-  {
-    id: '4',
-    name: 'Mom',
-    isGroup: false,
-    lastMessage: "Love you! Have a great day 💕",
-    timestamp: 'Yesterday',
-    unread: 0,
-    avatar: 'MO'
-  },
-  {
-    id: '5',
-    name: 'Project Team',
-    isGroup: true,
-    lastMessage: "Jamie: Updated the presentation",
-    timestamp: 'Yesterday',
-    unread: 5,
-    participants: ['Jamie', 'Sam', 'Chris', 'Morgan']
-  },
-  {
-    id: '6',
-    name: 'Alex Rivera',
-    isGroup: false,
-    lastMessage: "k",
-    timestamp: 'Tuesday',
-    unread: 0,
-    avatar: 'AR'
-  },
-  {
-    id: '7',
-    name: 'Jordan Lee',
-    isGroup: false,
-    lastMessage: "That sounds great! Let's do it",
-    timestamp: 'Monday',
-    unread: 0,
-    avatar: 'JL'
-  },
-  {
-    id: '8',
-    name: 'Family',
-    isGroup: true,
-    lastMessage: "Dad: See you all on Sunday!",
-    timestamp: 'Monday',
-    unread: 0,
-    participants: ['Mom', 'Dad', 'Sister']
-  },
-  {
-    id: '9',
-    name: 'Taylor Kim',
-    isGroup: false,
-    lastMessage: "Thanks for your help yesterday 😊",
-    timestamp: 'Sunday',
-    unread: 0,
-    avatar: 'TK'
-  },
-  {
-    id: '10',
-    name: 'Book Club',
-    isGroup: true,
-    lastMessage: "Casey: What did everyone think?",
-    timestamp: 'Saturday',
-    unread: 0,
-    participants: ['Casey', 'Riley', 'Quinn']
-  }
-];
+// No hard-coded chats; everything comes from App.tsx / Firebase
+const mockChats: Chat[] = [];
 
 export function ChatListScreen({ userId, onChatSelect, onCreateChat, customChats, chatPreviews,}: ChatListScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const allChats = React.useMemo(() => {
-    // Convert customChats into Chat objects, avoiding duplicates with mockChats
     const customChatsList: Chat[] = customChats
-      ? Object.entries(customChats)
-          .filter(([id]) => !mockChats.find(c => c.id === id))
-          .map(([id, details]) => ({
+      ? Object.entries(customChats).map(([id, details]) => {
+          const preview = chatPreviews?.[id];
+  
+          return {
             id,
             name: details.name,
             isGroup: details.isGroup,
-            lastMessage: 'Start a conversation...',
-            timestamp: 'Now',
+            lastMessage: preview?.lastMessage ?? 'Start a conversation...',
+            timestamp: preview?.timestamp ?? 'Now',
             unread: 0,
             avatar: details.name.split(' ').map(n => n[0]).join(''),
-            participants: details.isGroup ? details.name.split(', ') : undefined
-          }))
+            participants: details.isGroup ? details.name.split(', ') : undefined,
+          };
+        })
       : [];
   
-    // Merge custom + mock
-    const merged = [...customChatsList, ...mockChats];
-  
-    // Apply live chat preview overrides (if any exist)
-    return merged.map(chat => {
-      const preview = chatPreviews?.[chat.id];
-      if (!preview) return chat;
-  
-      return {
-        ...chat,
-        lastMessage: preview.lastMessage,
-        timestamp: preview.timestamp,
-        unread: 0, // update logic later if desired
-      };
-    });
-  }, [customChats, chatPreviews]); // Add chatPreviews to dependencies
+    return customChatsList;
+  }, [customChats, chatPreviews]);  
   
 
   const filteredChats = searchQuery.trim()
