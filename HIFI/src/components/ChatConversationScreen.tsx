@@ -68,7 +68,8 @@ export function ChatConversationScreen({
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { getConfidenceBarColor } = useAccessibility();
+  // 🔹 Pull both settings *and* getConfidenceBarColor so colorblind / high contrast apply
+  const { settings, getConfidenceBarColor } = useAccessibility();
   const { suggestionTrigger, disableSuggestions } = useToneSettings();
 
   const currentPresetData = allPresets.find((p) => p.id === selectedPreset);
@@ -209,6 +210,25 @@ export function ChatConversationScreen({
         .slice(0, 2);
   };
 
+  // 🔹 Utility: choose bubble classes based on sender + high contrast
+  const getBubbleClasses = (sender: 'me' | 'them') => {
+    const base = 'rounded-[18px] px-3.5 py-2.5';
+
+    if (settings.highContrast) {
+      // High contrast variant – easier differentiable
+      if (sender === 'me') {
+        return `${base} bg-black text-white border border-black`;
+      }
+      return `${base} bg-white text-black border border-black`;
+    }
+
+    // Normal palette
+    if (sender === 'me') {
+      return `${base} bg-[#007AFF] text-white`;
+    }
+    return `${base} bg-[#E9E9EB] text-black`;
+  };
+
   return (
       <div className="h-full flex flex-col bg-white overflow-hidden">
         {/* Navigation Bar */}
@@ -327,11 +347,7 @@ export function ChatConversationScreen({
                       <motion.div
                           initial={{ scale: 0.9, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className={`rounded-[18px] px-3.5 py-2.5 ${
-                              message.sender === 'me'
-                                  ? 'bg-[#007AFF] text-white'
-                                  : 'bg-[#E9E9EB] text-black'
-                          }`}
+                          className={getBubbleClasses(message.sender)}
                       >
                         <p className="text-[15px] leading-[1.35]">
                           {message.text}

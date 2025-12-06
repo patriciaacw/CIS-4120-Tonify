@@ -4,7 +4,6 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import {
   Sparkles,
-  Send,
   RefreshCw,
   Lightbulb,
   Edit3,
@@ -22,7 +21,7 @@ interface ComposeAreaProps {
   allPresets: TonePreset[];
   activeTab?: string;
   onTabChange?: (tab: string) => void;
-  onSend?: (text: string) => void;
+  onSend?: (text: string) => void; // still available but no UI button
 }
 
 interface ToneAnalysis {
@@ -38,255 +37,6 @@ interface ToneAnalysis {
   emojiSuggestions?: string[];
 }
 
-const analyzeTone = (text: string, preset: string, presetData?: any): ToneAnalysis | null => {
-  if (!text.trim()) return null;
-
-  const exclamationCount = (text.match(/!/g) || []).length;
-  const hasAllCaps = /[A-Z]{3,}/.test(text);
-  const isDry = text.trim().length < 10 && !/[!?.]/.test(text);
-
-  const guidelines = presetData?.guidelines;
-
-  const getPresetSuggestions = (baseText: string, toneType: string) => {
-    const suggestions: string[] = [];
-
-    if (
-        preset === 'professional' ||
-        guidelines?.targetTone?.toLowerCase().includes('professional') ||
-        guidelines?.targetTone?.toLowerCase().includes('formal')
-    ) {
-      if (exclamationCount > 1)
-        suggestions.push('Reduce exclamation marks for a more professional tone');
-      if (hasAllCaps) suggestions.push('Avoid all caps in professional communication');
-      if (isDry && toneType === 'negative')
-        suggestions.push('Consider adding more context to be clearer');
-      if (!text.match(/[.!?]$/)) suggestions.push('End with proper punctuation');
-    } else if (
-        preset === 'enthusiastic' ||
-        guidelines?.targetTone?.toLowerCase().includes('enthusiastic') ||
-        guidelines?.targetTone?.toLowerCase().includes('energetic')
-    ) {
-      if (exclamationCount === 0) suggestions.push('Add an exclamation mark to show enthusiasm!');
-      if (!text.match(/[😊🎉✨👍]/)) suggestions.push('Consider adding an energetic emoji');
-      if (text.endsWith('.'))
-        suggestions.push('Replace period with exclamation mark for more energy');
-    } else if (
-        preset === 'casual' ||
-        guidelines?.targetTone?.toLowerCase().includes('casual') ||
-        guidelines?.targetTone?.toLowerCase().includes('relaxed')
-    ) {
-      if (text.length > 50) suggestions.push('Consider keeping it shorter and more casual');
-      if (exclamationCount > 2)
-        suggestions.push('This might be a bit much even for casual chat');
-    } else if (
-        preset === 'friendly-clear' ||
-        guidelines?.targetTone?.toLowerCase().includes('friendly') ||
-        guidelines?.targetTone?.toLowerCase().includes('warm')
-    ) {
-      if (isDry) suggestions.push('Add some warmth with an emoji or friendly phrase');
-      if (exclamationCount > 2) suggestions.push('Tone down the intensity slightly');
-    }
-
-    return suggestions;
-  };
-
-  if (text.includes("I'll be there later!!!")) {
-    const suggestions = getPresetSuggestions(text, 'uncertain');
-    const baseAlternative =
-        preset === 'professional'
-            ? 'I will be there later. Thank you for your patience.'
-            : preset === 'enthusiastic'
-                ? "I'll be there later! So excited to see you!"
-                : "I'll be there later! Looking forward to it.";
-
-    return {
-      originalText: text,
-      detectedTone: {
-        label: 'Excited but possibly overwhelming',
-        type: 'uncertain',
-        explanation:
-            preset === 'professional'
-                ? 'Multiple exclamation marks may be too informal for a professional setting.'
-                : 'Multiple exclamation marks show enthusiasm, but may come across as too intense in some contexts.',
-        confidence: 82,
-      },
-      suggestions:
-          suggestions.length > 0
-              ? suggestions
-              : [
-                'Consider reducing exclamation marks for a calmer tone',
-                `For ${preset} style: Try a more balanced approach`,
-              ],
-      alternativeText: baseAlternative,
-      emojiSuggestions: preset === 'professional' ? [] : ['😊', '👍', '✨'],
-    };
-  }
-
-  if (exclamationCount >= 3) {
-    const suggestions = getPresetSuggestions(text, 'uncertain');
-    const alternativeText =
-        preset === 'professional'
-            ? text.replace(/!+/g, '.')
-            : preset === 'enthusiastic'
-                ? text
-                : text.replace(/!{3,}/g, '!');
-
-    return {
-      originalText: text,
-      detectedTone: {
-        label:
-            preset === 'enthusiastic'
-                ? 'Very Excited (fits your style!)'
-                : 'Very Excited',
-        type: preset === 'enthusiastic' ? 'positive' : 'uncertain',
-        explanation:
-            preset === 'professional'
-                ? 'Multiple exclamation marks are not appropriate for professional communication.'
-                : preset === 'enthusiastic'
-                    ? 'High energy matches your enthusiastic preset! This conveys excitement well.'
-                    : 'Multiple exclamation marks convey high energy and excitement, which might be overwhelming to some recipients.',
-        confidence: 78,
-      },
-      suggestions:
-          suggestions.length > 0
-              ? suggestions
-              : [
-                preset === 'enthusiastic'
-                    ? 'Your enthusiasm shines through!'
-                    : 'Your message has high energy',
-                preset === 'enthusiastic'
-                    ? 'This fits your energetic style well'
-                    : 'Consider reducing exclamation marks if you want a calmer tone',
-              ],
-      alternativeText: preset === 'enthusiastic' ? undefined : alternativeText,
-      emojiSuggestions: preset === 'professional' ? [] : ['😊', '🎉', '✨'],
-    };
-  }
-
-  if (hasAllCaps) {
-    const suggestions = getPresetSuggestions(text, 'negative');
-    return {
-      originalText: text,
-      detectedTone: {
-        label: 'Intense/Shouting',
-        type: 'negative',
-        explanation:
-            preset === 'professional'
-                ? 'All caps is unprofessional and can be perceived as aggressive.'
-                : "All caps can be perceived as shouting or aggressive, even if that's not your intent.",
-        confidence: 88,
-      },
-      suggestions:
-          suggestions.length > 0
-              ? suggestions
-              : ['ALL CAPS may come across as shouting', `For ${preset} style: Use normal capitalization`],
-      alternativeText:
-          text.toLowerCase().charAt(0).toUpperCase() + text.toLowerCase().slice(1),
-    };
-  }
-
-  if (isDry) {
-    const suggestions = getPresetSuggestions(text, 'neutral');
-    let alternativeText = text + '.';
-
-    if (preset === 'friendly-clear') {
-      alternativeText = text + ' 😊';
-    } else if (preset === 'enthusiastic') {
-      alternativeText = text + '!';
-    } else if (preset === 'professional') {
-      alternativeText = text + '. Thank you.';
-    }
-
-    return {
-      originalText: text,
-      detectedTone: {
-        label: preset === 'casual' ? 'Brief & Casual' : 'Dry/Terse',
-        type: 'neutral',
-        explanation:
-            preset === 'casual'
-                ? 'Short and to the point - fits a casual style, though could use punctuation.'
-                : preset === 'professional'
-                    ? 'Very brief messages may seem dismissive in professional contexts.'
-                    : 'Short messages without punctuation can seem dismissive or uninterested.',
-        confidence: 72,
-      },
-      suggestions:
-          suggestions.length > 0
-              ? suggestions
-              : [
-                preset === 'casual' ? 'Fits your casual style!' : 'This might seem a bit dry',
-                preset === 'professional'
-                    ? 'Add more context for clarity'
-                    : 'Consider adding more context or a friendly emoji',
-              ],
-      alternativeText: preset === 'casual' ? undefined : alternativeText,
-      emojiSuggestions: preset === 'professional' ? [] : ['😊', '👍', '🙂'],
-    };
-  }
-
-  if (text.toLowerCase().includes('sorry') || text.toLowerCase().includes('apologize')) {
-    return {
-      originalText: text,
-      detectedTone: {
-        label: 'Apologetic',
-        type: 'neutral',
-        explanation:
-            'Your message expresses regret or apology in a clear, sincere way.',
-        confidence: 91,
-      },
-      suggestions: [
-        'Your apologetic tone comes through clearly',
-        'This should be well-received',
-      ],
-      emojiSuggestions: ['🙏', '💙', '😔'],
-    };
-  }
-
-  if (text.includes('?') && text.split(' ').length <= 5) {
-    return {
-      originalText: text,
-      detectedTone: {
-        label: 'Curious',
-        type: 'positive',
-        explanation:
-            'Your question is direct and friendly, inviting conversation.',
-        confidence: 85,
-      },
-      suggestions: ['Your tone is friendly and inquisitive'],
-      emojiSuggestions: ['🤔', '😊', '👀'],
-    };
-  }
-
-  const suggestions = getPresetSuggestions(text, 'neutral');
-  let explanation =
-      'Your message has a balanced, conversational tone that should be well-received.';
-
-  if (preset === 'professional' && guidelines) {
-    explanation = 'Your message maintains an appropriate professional tone.';
-  } else if (preset === 'enthusiastic' && !exclamationCount && guidelines) {
-    explanation =
-        'Your message is clear, but could be more energetic for your enthusiastic style.';
-  } else if (preset === 'casual' && text.length > 40 && guidelines) {
-    explanation =
-        'Your message is clear, though slightly long for casual chat.';
-  }
-
-  return {
-    originalText: text,
-    detectedTone: {
-      label: 'Neutral',
-      type: 'neutral',
-      explanation,
-      confidence: 76,
-    },
-    suggestions:
-        suggestions.length > 0
-            ? suggestions
-            : [`Your message tone fits the ${preset} style well`],
-    emojiSuggestions: preset === 'professional' ? [] : ['😊', '👍', '🙂'],
-  };
-};
-
 export function ComposeArea({
                               selectedPreset,
                               allPresets,
@@ -297,28 +47,71 @@ export function ComposeArea({
   const [message, setMessage] = useState('');
   const [analysis, setAnalysis] = useState<ToneAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // 🔹 Live tone preview that should match detected tone
   const [livePreview, setLivePreview] = useState<ToneAnalysis | null>(null);
 
   const analysisRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const { autoCheckEnabled, disableSuggestions, suggestionTrigger } = useToneSettings();
-  const { settings } = useAccessibility(); // if unused, you can remove
+  const { disableSuggestions, suggestionTrigger } = useToneSettings();
+  const { settings } = useAccessibility(); // kept for future use / consistency
 
   const currentPresetData = allPresets.find((p) => p.id === selectedPreset);
 
-  // Live preset-aware tone hints while typing (Compose tab only)
+  // A simple request counter to avoid race conditions in live tone API calls
+  const latestRequestId = useRef(0);
+
+  // 🔹 LIVE TONE: always use classifyTone so live tone == detected tone
   useEffect(() => {
-    if (autoCheckEnabled && message.trim()) {
-      const timer = setTimeout(() => {
-        const result = analyzeTone(message, selectedPreset, currentPresetData);
-        setLivePreview(result);
-      }, 500);
-      return () => clearTimeout(timer);
-    } else {
+    if (!message.trim()) {
       setLivePreview(null);
+      return;
     }
-  }, [message, selectedPreset, currentPresetData, autoCheckEnabled]);
+
+    const thisRequestId = ++latestRequestId.current;
+
+    // Show quick placeholder so the pill appears immediately
+    setLivePreview((prev) => ({
+      originalText: message,
+      detectedTone: {
+        label: 'Analyzing…',
+        type: 'uncertain',
+        explanation: 'Analyzing tone...',
+        confidence: undefined,
+      },
+      suggestions: prev?.suggestions,
+      emojiSuggestions: prev?.emojiSuggestions ?? [],
+    }));
+
+    const timer = setTimeout(async () => {
+      try {
+        const tone = await classifyTone(message);
+        if (!tone) return;
+        // Only apply if this is still the latest request
+        if (thisRequestId !== latestRequestId.current) return;
+
+        setLivePreview({
+          originalText: message,
+          detectedTone: {
+            label: tone.label,
+            type: tone.type,
+            explanation: tone.explanation,
+            confidence: tone.confidence,
+          },
+          suggestions: tone.suggestions && tone.suggestions.length > 0 ? tone.suggestions : [],
+          emojiSuggestions: [],
+        });
+      } catch (err) {
+        console.error('Live tone classify failed:', err);
+        if (thisRequestId === latestRequestId.current) {
+          setLivePreview(null);
+        }
+      }
+    }, 400); // debounce
+
+    return () => clearTimeout(timer);
+  }, [message, selectedPreset, currentPresetData]);
 
   // Auto-scroll to analysis card when it appears
   useEffect(() => {
@@ -332,12 +125,103 @@ export function ComposeArea({
     }
   }, [analysis]);
 
+  // 🔹 Helper: build preset-aware suggestions from guidelines + detected tone
+  const buildPresetSuggestions = (
+      msg: string,
+      toneResult: {
+        label: string;
+        type: 'positive' | 'neutral' | 'negative' | 'uncertain';
+        explanation: string;
+        confidence?: number;
+        suggestions?: string[];
+      },
+      preset: string,
+      presetData?: TonePreset
+  ): string[] => {
+    const presetSuggestions: string[] = [];
+
+    if (!presetData?.guidelines) return presetSuggestions;
+
+    const g = presetData.guidelines;
+
+    // High-level reminder of target tone
+    if (g.targetTone) {
+      presetSuggestions.push(
+          `For your "${presetData.name}" preset, aim for: ${g.targetTone}.`
+      );
+    }
+
+    // Encourage things user said they want
+    if (g.encourages && g.encourages.length > 0) {
+      const topEncourages = g.encourages.slice(0, 2).join(', ');
+      presetSuggestions.push(`Try including: ${topEncourages}.`);
+    }
+
+    // Only emphasize "avoids" when tone is negative/uncertain or explanation hints at issues
+    if (
+        (toneResult.type === 'negative' || toneResult.type === 'uncertain') &&
+        g.avoids &&
+        g.avoids.length > 0
+    ) {
+      const topAvoids = g.avoids.slice(0, 2).join(', ');
+      presetSuggestions.push(`Watch out for: ${topAvoids}.`);
+    }
+
+    return presetSuggestions;
+  };
+
   const handleAnalyze = async () => {
     if (!message.trim()) return;
     setIsAnalyzing(true);
 
     try {
-      const tone = await classifyTone(message);
+      // 🔹 If livePreview is already for this exact text and not "Analyzing…",
+      // reuse it so detected tone == live tone.
+      let toneResult:
+          | {
+        label: string;
+        type: 'positive' | 'neutral' | 'negative' | 'uncertain';
+        explanation: string;
+        confidence?: number;
+        suggestions?: string[];
+      }
+          | null = null;
+
+      if (
+          livePreview &&
+          livePreview.originalText === message &&
+          livePreview.detectedTone.label !== 'Analyzing…'
+      ) {
+        toneResult = {
+          label: livePreview.detectedTone.label,
+          type: livePreview.detectedTone.type,
+          explanation: livePreview.detectedTone.explanation,
+          confidence: livePreview.detectedTone.confidence,
+          suggestions: livePreview.suggestions,
+        };
+      } else {
+        const tone = await classifyTone(message);
+        if (!tone) {
+          setIsAnalyzing(false);
+          return;
+        }
+        toneResult = tone;
+      }
+
+      // 🔹 Build combined suggestions: AI suggestions + preset-aware guidance
+      const aiSuggestions =
+          toneResult.suggestions && toneResult.suggestions.length > 0
+              ? toneResult.suggestions
+              : [];
+
+      const presetAware = buildPresetSuggestions(
+          message,
+          toneResult,
+          selectedPreset,
+          currentPresetData
+      );
+
+      const combinedSuggestions = [...aiSuggestions, ...presetAware];
 
       const targetTone =
           currentPresetData?.guidelines?.targetTone ||
@@ -350,16 +234,13 @@ export function ComposeArea({
       const newAnalysis: ToneAnalysis = {
         originalText: message,
         detectedTone: {
-          label: tone.label,
-          type: tone.type,
-          explanation: tone.explanation,
-          confidence: tone.confidence,
+          label: toneResult.label,
+          type: toneResult.type,
+          explanation: toneResult.explanation,
+          confidence: toneResult.confidence,
         },
-        suggestions:
-            tone.suggestions && tone.suggestions.length > 0
-                ? tone.suggestions
-                : undefined,
-        alternativeText: rewrite.suggestions[0],
+        suggestions: combinedSuggestions.length > 0 ? combinedSuggestions : undefined,
+        alternativeText: rewrite.suggestions?.[0],
         emojiSuggestions: [],
       };
 
@@ -372,22 +253,11 @@ export function ComposeArea({
     }
   };
 
-  const handleSend = () => {
-    if (!message.trim()) return;
-
-    const textToSend = analysis?.alternativeText || message;
-    onSend?.(textToSend);
-
-    // Reset compose state after send
-    setMessage('');
-    setAnalysis(null);
-    setLivePreview(null);
-  };
-
   const applyAlternative = () => {
     if (analysis?.alternativeText) {
       setMessage(analysis.alternativeText);
       setAnalysis(null);
+      // livePreview will auto-refresh because message changed
     }
   };
 
@@ -434,6 +304,7 @@ export function ComposeArea({
       if (rewrite.suggestions && rewrite.suggestions.length > 0) {
         setMessage(rewrite.suggestions[0]);
         setAnalysis(null);
+        // livePreview will update automatically
       }
     } catch (err) {
       console.error(err);
@@ -452,6 +323,7 @@ export function ComposeArea({
   const loadExample = (example: string) => {
     setMessage(example);
     setAnalysis(null);
+    // livePreview will update automatically
   };
 
   return (
@@ -580,7 +452,7 @@ export function ComposeArea({
 
             {/* Message Input with Live Preview */}
             <div>
-              <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center justify_between mb-2.5">
                 <label className="text-[13px] text-gray-600">
                   Your message:
                 </label>
@@ -833,8 +705,8 @@ export function ComposeArea({
                           );
                         })()}
 
-                    {/* Edit & Send Buttons */}
-                    <div className="flex gap-2">
+                    {/* Edit button only (no Send) */}
+                    <div className="flex">
                       <Button
                           onClick={() => {
                             setAnalysis(null);
@@ -844,13 +716,6 @@ export function ComposeArea({
                       >
                         <Edit3 className="w-4 h-4 mr-2" />
                         Edit Message
-                      </Button>
-                      <Button
-                          onClick={handleSend}
-                          className="flex-1 bg-[#34C759] hover:bg-[#2FB350]"
-                      >
-                        <Send className="w-4 h-4 mr-2" />
-                        Send
                       </Button>
                     </div>
                   </motion.div>

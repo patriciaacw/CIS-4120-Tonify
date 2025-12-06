@@ -33,12 +33,12 @@ export function ChatListScreen({ userId, onChatSelect, onCreateChat, customChats
     const customChatsList: Chat[] = customChats
       ? Object.entries(customChats).map(([id, details]) => {
           const preview = chatPreviews?.[id];
-  
+
           return {
             id,
             name: details.name,
             isGroup: details.isGroup,
-            lastMessage: preview?.lastMessage ?? 'Start a conversation...',
+            lastMessage: preview?.lastMessage ?? '',
             timestamp: preview?.timestamp ?? 'Now',
             unread: 0,
             avatar: details.name.split(' ').map(n => n[0]).join(''),
@@ -46,10 +46,10 @@ export function ChatListScreen({ userId, onChatSelect, onCreateChat, customChats
           };
         })
       : [];
-  
+
     return customChatsList;
-  }, [customChats, chatPreviews]);  
-  
+  }, [customChats, chatPreviews]);
+
 
   const filteredChats = searchQuery.trim()
     ? allChats.filter(chat =>
@@ -62,16 +62,16 @@ export function ChatListScreen({ userId, onChatSelect, onCreateChat, customChats
   const sortedChats = [...filteredChats].sort((a, b) => {
     const aPreview = chatPreviews?.[a.id];
     const bPreview = chatPreviews?.[b.id];
-  
+
     // Chats with live previews (recent messages) come first
     if (!!aPreview && !bPreview) return -1;
     if (!aPreview && !!bPreview) return 1;
-  
+
     // If both have previews, fall back to timestamp string
     if (aPreview && bPreview) {
       return bPreview.timestamp.localeCompare(aPreview.timestamp);
     }
-  
+
     return 0;
   });
 
@@ -105,7 +105,7 @@ export function ChatListScreen({ userId, onChatSelect, onCreateChat, customChats
 
       {/* Create Chat Button */}
       <div className="px-[16px] py-[12px] bg-white border-b border-[#E5E5EA] shrink-0">
-        <button 
+        <button
           onClick={onCreateChat}
           className="flex items-center gap-[12px] text-[#007AFF] hover:opacity-80 transition-opacity active:opacity-60"
         >
@@ -134,9 +134,9 @@ export function ChatListScreen({ userId, onChatSelect, onCreateChat, customChats
                 {filteredChats
                   .filter(chat => !chat.isGroup)
                   .map((chat, index) => (
-                    <ChatCell 
-                      key={chat.id} 
-                      chat={chat} 
+                    <ChatCell
+                      key={chat.id}
+                      chat={chat}
                       onSelect={onChatSelect}
                       delay={index * 0.03}
                       getGroupAvatar={getGroupAvatar}
@@ -154,9 +154,9 @@ export function ChatListScreen({ userId, onChatSelect, onCreateChat, customChats
                 {filteredChats
                   .filter(chat => chat.isGroup)
                   .map((chat, index) => (
-                    <ChatCell 
-                      key={chat.id} 
-                      chat={chat} 
+                    <ChatCell
+                      key={chat.id}
+                      chat={chat}
                       onSelect={onChatSelect}
                       delay={index * 0.03}
                       getGroupAvatar={getGroupAvatar}
@@ -172,14 +172,14 @@ export function ChatListScreen({ userId, onChatSelect, onCreateChat, customChats
 }
 
 // Separate ChatCell component for better organization
-function ChatCell({ 
-  chat, 
-  onSelect, 
+function ChatCell({
+  chat,
+  onSelect,
   delay,
-  getGroupAvatar 
-}: { 
-  chat: Chat; 
-  onSelect: (id: string) => void; 
+  getGroupAvatar
+}: {
+  chat: Chat;
+  onSelect: (id: string) => void;
   delay: number;
   getGroupAvatar: (participants?: string[]) => string;
 }) {

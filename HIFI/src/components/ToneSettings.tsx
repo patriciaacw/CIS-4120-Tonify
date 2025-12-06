@@ -309,25 +309,7 @@ export function ToneSettings({ selectedPreset, onPresetChange, onPresetsChange, 
 
             {/* Additional Settings */}
             <div className="pt-4 border-t border-gray-200">
-              <h3 className="text-gray-900 mb-3 text-[15px]">General Options</h3>
-
-              <div className="space-y-2.5">
-                <label className="flex items-center justify-between p-3 bg-[#F6F6F6] rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                  <div className="flex-1 min-w-0 pr-3">
-                    <div className="text-[14px] text-gray-900">Show tone indicators on all messages</div>
-                    <div className="text-[12px] text-gray-600 mt-0.5">Display tone indicators automatically</div>
-                  </div>
-                  <Switch checked={showTonesOnAll} onCheckedChange={setShowTonesOnAll} />
-                </label>
-
-                <label className="flex items-center justify-between p-3 bg-[#F6F6F6] rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                  <div className="flex-1 min-w-0 pr-3">
-                    <div className="text-[14px] text-gray-900">Auto-check before sending</div>
-                    <div className="text-[12px] text-gray-600 mt-0.5">Automatically analyze tone when composing</div>
-                  </div>
-                  <Switch checked={autoCheckEnabled} onCheckedChange={setAutoCheckEnabled} />
-                </label>
-              </div>
+              <h3 className="text-gray-900 mb-3 text-[15px]">Settings</h3>
             </div>
 
             {/* Advanced Settings */}
