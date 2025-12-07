@@ -18,7 +18,7 @@ export interface RewriteResult {
 const API_BASE = ""; // same-origin
 
 export async function classifyTone(message: string): Promise<ToneResult> {
-  const res = await fetch(`${BASE_URL}/api/classifyTone`, {
+  const res = await fetch('/api/classifyTone', {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message })
@@ -35,7 +35,7 @@ export async function rewriteTone(
   message: string,
   targetTone: string
 ): Promise<RewriteResult> {
-  const res = await fetch(`${BASE_URL}/api/rewriteTone`, {
+  const res = await fetch('/api/rewriteTone', {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message, targetTone })
