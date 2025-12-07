@@ -1,3 +1,4 @@
+//Generated with assistance from ChatGPT -- December 6, 2025
 import React, { useState, useEffect, useRef } from 'react';
 import { ToneIndicator } from './ToneIndicator';
 import { Button } from './ui/button';
@@ -48,23 +49,12 @@ export function ComposeArea({
   const [analysis, setAnalysis] = useState<ToneAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // 🔹 Live tone preview that should match detected tone
-  const [livePreview, setLivePreview] = useState<ToneAnalysis | null>(null);
-
-  const analysisRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const { disableSuggestions, suggestionTrigger } = useToneSettings();
-  const { settings } = useAccessibility(); // kept for future use / consistency
-
-  const currentPresetData = allPresets.find((p) => p.id === selectedPreset);
-
-  // A simple request counter to avoid race conditions in live tone API calls
-  const latestRequestId = useRef(0);
-
-  // 🔹 LIVE TONE: always use classifyTone so live tone == detected tone
+    // 🔹 LIVE TONE: use classifyTone, but only when user pauses + message is long enough
   useEffect(() => {
-    if (!message.trim()) {
+    const trimmed = message.trim();
+
+    // If empty or very short, don't analyze
+    if (!trimmed || trimmed.length < 5) {
       setLivePreview(null);
       return;
     }
@@ -84,10 +74,12 @@ export function ComposeArea({
       emojiSuggestions: prev?.emojiSuggestions ?? [],
     }));
 
+    // Wait longer before hitting the API so we don't fire on every keystroke
     const timer = setTimeout(async () => {
       try {
         const tone = await classifyTone(message);
         if (!tone) return;
+
         // Only apply if this is still the latest request
         if (thisRequestId !== latestRequestId.current) return;
 
@@ -108,10 +100,11 @@ export function ComposeArea({
           setLivePreview(null);
         }
       }
-    }, 400); // debounce
+    }, 1200); // ⬅️ was 400ms, now 1.2s pause before we call the API
 
     return () => clearTimeout(timer);
   }, [message, selectedPreset, currentPresetData]);
+
 
   // Auto-scroll to analysis card when it appears
   useEffect(() => {
