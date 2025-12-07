@@ -180,13 +180,15 @@ export function ComposeArea({
   };
 
   const handleSendFromCompose = () => {
-    if (!message.trim() || !onSend) return;
-
     const text = message.trim();
-    onSend(text);          // let parent actually send the message
-    setMessage('');        // clear compose box
-    setAnalysis(null);     // clear analysis
-    onTabChange?.('messages'); // jump back to Messages tab
+    if (!text) return;
+
+    if (onSend) {
+      onSend(text);          // send to Firebase / backend
+    }
+
+    setAnalysis(null);       // clear analysis
+    setMessage('');          // clear textarea
   };
 
   const handleAnalyze = async () => {
@@ -588,26 +590,28 @@ export function ComposeArea({
             )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2 relative">
-            <Button
-              onClick={handleAnalyze}
-              disabled={!message.trim() || isAnalyzing}
-              className="flex-1 bg-[#007AFF] hover:bg-[#0051D5]"
-            >
-              {isAnalyzing ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Check Tone
-                </>
-              )}
-            </Button>
-            <Button
+            {/* Action Buttons */}
+            <div className="flex gap-2 relative">
+              <Button
+                onClick={handleAnalyze}
+                disabled={!message.trim() || isAnalyzing}
+                className="flex-1 bg-[#007AFF] hover:bg-[#0051D5]"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Check Tone
+                  </>
+                )}
+              </Button>
+
+              {/* Send from Compose */}
+              <Button
                 onClick={handleSendFromCompose}
                 disabled={!message.trim() || !onSend}
                 variant="outline"
@@ -616,7 +620,7 @@ export function ComposeArea({
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Send
               </Button>
-          </div>
+            </div>
 
           {/* Analysis Results */}
           <AnimatePresence>
