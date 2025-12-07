@@ -1,3 +1,4 @@
+// vite.config.ts
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
@@ -60,9 +61,15 @@ export default defineConfig({
     outDir: 'build',
   },
   server: {
-    host: true, // allow external access
-    allowedHosts: [
-      'stridulous-subpericranial-theola.ngrok-free.dev',
-    ],
+    host: true,       // so ngrok/phone can reach it
+    port: 3000,
+    open: true,
+    allowedHosts: ['stridulous-subpericranial-theola.ngrok-free.dev'],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000', // Node server
+        changeOrigin: true,
+      },
+    },
   },
 });
