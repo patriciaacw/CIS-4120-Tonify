@@ -1,8 +1,6 @@
 //Generated with assistance from Chat GPT – Nov 8, 2025
 // src/services/aiClient.ts
 
-const BASE_URL = "http://localhost:4000";
-
 export type ToneType = "positive" | "neutral" | "negative" | "uncertain";
 
 export interface ToneResult {
@@ -16,6 +14,8 @@ export interface ToneResult {
 export interface RewriteResult {
   suggestions: string[];
 }
+
+const API_BASE = ""; // same-origin
 
 export async function classifyTone(message: string): Promise<ToneResult> {
   const res = await fetch(`${BASE_URL}/api/classifyTone`, {
