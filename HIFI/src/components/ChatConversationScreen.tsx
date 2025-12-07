@@ -1,3 +1,4 @@
+//Generated with assistance from ChatGPT -- December 6, 2025
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -438,43 +439,36 @@ export function ChatConversationScreen({
           </div>
         </div>
 
-        {/* Input Bar */}
+                {/* Input Bar */}
         <div className="bg-[#F6F6F6] border-t border-gray-200 px-3 py-2.5 shrink-0">
           <div className="flex items-end gap-2.5">
             <button className="w-8 h-8 rounded-full bg-transparent flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors shrink-0 mb-0.5">
               <Plus className="w-5 h-5" />
             </button>
 
+            {/* 👇 single pill: input + send button, no camera/mic */}
             <div className="flex-1 bg-white rounded-[20px] px-4 py-2 border border-gray-300 flex items-center gap-2.5">
               <input
-                  ref={inputRef}
-                  type="text"
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="iMessage"
-                  className="flex-1 bg-transparent text-[15px] focus:outline-none placeholder:text-gray-400"
+                ref={inputRef}
+                type="text"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                placeholder="iMessage"
+                className="flex-1 bg-transparent text-[15px] focus:outline-none placeholder:text-gray-400"
               />
-              <button className="text-gray-500 hover:text-gray-700 transition-colors">
-                <Camera className="w-5 h-5" />
-              </button>
-              <button className="text-gray-500 hover:text-gray-700 transition-colors">
-                <Mic className="w-5 h-5" />
-              </button>
-            </div>
 
-            {inputText.trim() ? (
+              {inputText.trim() && (
                 <button
-                    onClick={handleSend}
-                    className="w-8 h-8 rounded-full bg-[#007AFF] flex items-center justify-center text-white hover:bg-[#0051D5] transition-colors shrink-0 mb-0.5 active:scale-95"
+                  onClick={handleSend}
+                  className="w-8 h-8 rounded-full bg-[#007AFF] flex items-center justify-center text-white hover:bg-[#0051D5] transition-colors active:scale-95"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
                   </svg>
                 </button>
-            ) : (
-                <div className="w-8 h-8 mb-0.5" />
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
