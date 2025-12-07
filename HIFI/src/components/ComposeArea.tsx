@@ -179,6 +179,16 @@ export function ComposeArea({
     return presetSuggestions;
   };
 
+  const handleSendFromCompose = () => {
+    if (!message.trim() || !onSend) return;
+
+    const text = message.trim();
+    onSend(text);          // let parent actually send the message
+    setMessage('');        // clear compose box
+    setAnalysis(null);     // clear analysis
+    onTabChange?.('messages'); // jump back to Messages tab
+  };
+
   const handleAnalyze = async () => {
     if (!message.trim()) return;
     setIsAnalyzing(true);
@@ -597,6 +607,15 @@ export function ComposeArea({
                 </>
               )}
             </Button>
+            <Button
+                onClick={handleSendFromCompose}
+                disabled={!message.trim() || !onSend}
+                variant="outline"
+                className="flex-1"
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Send
+              </Button>
           </div>
 
           {/* Analysis Results */}
