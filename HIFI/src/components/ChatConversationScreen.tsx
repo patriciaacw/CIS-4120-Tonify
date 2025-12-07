@@ -68,6 +68,12 @@ export function ChatConversationScreen({
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior });
+  };
 
   // 🔹 Pull both settings *and* getConfidenceBarColor so colorblind / high contrast apply
   const { settings, getConfidenceBarColor } = useAccessibility();
@@ -118,6 +124,16 @@ export function ChatConversationScreen({
 
     return unsubscribe;
   }, [chatId, userId, onMessagePreviewUpdate]);
+
+  useEffect(() => {
+    scrollToBottom('auto');
+  }, [chatId]);
+
+  // whenever messages update, smoothly scroll to bottom
+  useEffect(() => {
+    if (!allMessages.length) return;
+    scrollToBottom('smooth');
+  }, [allMessages.length]);
 
   // 2️⃣ Whenever liveMessages changes, classify any "them" messages with no tone yet
   useEffect(() => {
@@ -197,6 +213,7 @@ export function ChatConversationScreen({
       });
 
       setInputText('');
+      scrollToBottom('smooth');
     } catch (err) {
       console.error('Failed to send message:', err);
     }
