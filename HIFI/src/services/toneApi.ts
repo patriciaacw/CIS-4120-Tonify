@@ -9,6 +9,8 @@ export interface ToneResult {
     suggestions?: string[];
 }
 
+const API_BASE = ""; // same-origin
+
 export async function classifyTone(message: string): Promise<ToneResult | undefined> {
     try {
         const res = await fetch('http://localhost:4000/api/classifyTone', {
