@@ -243,6 +243,14 @@ export default function App() {
                           allPresets={allPresets}
                           activeTab={activeTab}
                           onTabChange={setActiveTab}
+                          onSend={async (text) => {
+                            if (!activeChatId) return;
+                            await sendMessage(activeChatId, {
+                              text,
+                              userId,
+                              chatId: activeChatId,
+                            });
+                          }}
                       />
                     </TabsContent>
 
