@@ -179,18 +179,6 @@ export function ComposeArea({
     return presetSuggestions;
   };
 
-  const handleSendFromCompose = () => {
-    const text = message.trim();
-    if (!text) return;
-
-    if (onSend) {
-      onSend(text);          // send to Firebase / backend
-    }
-
-    setAnalysis(null);       // clear analysis
-    setMessage('');          // clear textarea
-  };
-
   const handleAnalyze = async () => {
     if (!message.trim()) return;
     setIsAnalyzing(true);
@@ -608,17 +596,6 @@ export function ComposeArea({
                     Check Tone
                   </>
                 )}
-              </Button>
-
-              {/* Send from Compose */}
-              <Button
-                onClick={handleSendFromCompose}
-                disabled={!message.trim() || !onSend}
-                variant="outline"
-                className="flex-1"
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Send
               </Button>
             </div>
 
