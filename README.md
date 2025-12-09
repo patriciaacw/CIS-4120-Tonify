@@ -50,6 +50,9 @@ Open a **new terminal window** and run:
 ```bash
 npm install
 ```
+```bash
+npm install firebase
+```
 
 2. Start the development server:
 ```bash
